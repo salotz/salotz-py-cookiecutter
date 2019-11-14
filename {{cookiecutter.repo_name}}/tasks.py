@@ -1,7 +1,7 @@
 from invoke import task
 import sys
 
-DEV_ENV = '{{ cookiecutter.repo-name }}-dev'
+DEV_ENV = '{{ cookiecutter.repo_name }}-dev'
 PYTHON_VERSION = '{{ cookiecutter.pyversion }}'
 
 
