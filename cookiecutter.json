@@ -1,5 +1,17 @@
 {
-    "repo_name" : "nameless",
-    "pyversion" : "3.7",
-    "package_name" : "nameless"
+    "_extensions" : ["jinja2_time.TimeExtension"],
+    "project_name" : "repo-name",
+    "package_slug" : "default_repo_name",
+    "project_description" : "New Python Project",
+    "initial_version" : "0.0.0a0.dev0",
+    "copyright" : "BY-NC",
+    "license" : "MIT",
+    "owner_name" : "Joe Shmo",
+    "owner_email" : "joe@shmo.com",
+    "owner_nickname" : "jshmo",
+    "url" : "https://github.com/jshmo/default_repo_name",
+    "dev_url" : "https://github.com/jshmo/default_repo_name",
+    "doc_url" : "https://jshmo.github.io/default_repo_name",
+    "sdist_url" : "https://github.com/jshmo/default_repo_name/releases/download/",
+    "pyversion" : "3.7"
 }

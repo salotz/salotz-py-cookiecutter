@@ -1,0 +1,47 @@
+# core
+pip
+wheel
+twine
+pip-tools
+pipdeptree
+
+# virtual environments
+virtualenv
+
+# interactive and debugging
+ipython
+pdbpp
+remote-pdb
+
+# utilities
+# bumpversion
+
+# task running
+invoke
+fabric
+
+# docs
+sphinx
+guzzle_sphinx_theme
+sphinxcontrib-napoleon
+nbsphinx
+notebook
+
+# testing
+pytest
+pytest-runner
+argcomplete
+flake8
+tox
+coverage
+
+# code quality metrics
+lizard
+
+pytest-datadir
+pytest-cov
+pytest-benchmark
+pytest-profiling
+
+# the project's source in develop mode
+-e .

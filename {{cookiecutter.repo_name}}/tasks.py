@@ -1,20 +1,415 @@
 from invoke import task
 import sys
 
-DEV_ENV = '{{ cookiecutter.repo_name }}-dev'
 PYTHON_VERSION = '{{ cookiecutter.pyversion }}'
 
+BENCHMARK_STORAGE_URL="./metrics/benchmarks"
+BENCHMARK_STORAGE_URI="\"file://{}\"".format(BENCHMARK_STORAGE_URL)
+
+
+### Environments
+
+def conda_env(cx, env_name='dev'):
+    cx.run(f"conda create -y -n {env_name} python={PYTHON_VERSION}",
+        pty=True)
+
+    # install the extra pip dependencies
+    cx.run(f"$ANACONDA_DIR/envs/{env_name}/bin/pip install -r envs/{name}.requirements.txt")
+
+    # install the conda dev dependencies
+    cx.run(f"conda env update -n {env_name} --file envs/{name}.env.yaml")
+
+
+    # # install the pip tools dependencies
+    # cx.run(f"$ANACONDA_DIR/envs/{env_name}/bin/pip install -r tools.requirements.txt")
+
+    print("--------------------------------------------------------------------------------")
+    print(f"run: conda activate {env_name}")
+
+@task
+def env(cx, name='dev'):
+
+    env_name=f"wepy.{name}"
+
+    conda_env(cx, env_name=env_name)
+
+### Repo
+
+@task
+def submodule_tests(ctx):
+    """Retrieve the tests submodule if not already cloned."""
+
+    ctx.run("git submodule update --init --recursive")
+    ctx.run("git -C wepy-tests checkout master")
+
+
+### Dependencies
+# managing dependencies for the project at runtime
+
+## pip: things that can be controlled by pip
+
+@task
+def deps_pip_pin(cx):
+
+    cx.run("python -m piptools compile "
+           "--output-file=requirements.txt "
+           f"requirements.in")
+
+    # SNIPPET: generate hashes is not working right, or just confusing me
+    # cx.run("python -m piptools compile "
+    #        "--generate-hashes "
+    #        "--output-file=requirements.txt "
+    #        f"requirements.in")
+
+@task
+def deps_pip_update(cx):
+
+    cx.run("python -m piptools compile "
+           "--upgrade "
+           "--output-file=requirements.txt "
+           f"requirements.in")
+
+## conda: managing conda dependencies
+
+# STUB
+@task
+def deps_conda_pin(ctx):
+    pass
+
+# STUB
+@task
+def deps_conda_update(ctx):
+    pass
+
+## altogether
+@task(pre=[deps_pip_pin, deps_conda_pin])
+def deps_pin(cx):
+    pass
+
+@task(pre=[deps_pip_update, deps_conda_update])
+def deps_pin_update(cx):
+    pass
+
+
+
+### Cleaning
+
+@task
+def clean_dist(ctx):
+    """Remove all build products."""
+
+    ctx.run("rm -rf dist build */*.egg-info *.egg-info")
+
+@task
+def clean_cache(ctx):
+    """Remove all of the __pycache__ files in the packages."""
+    ctx.run('find . -name "__pycache__" -exec rm -r {} +')
+
+@task
+def clean_docs(ctx):
+    """Remove all documentation build products"""
+
+    ctx.run("rm -rf sphinx/_build/*")
+
+@task
+def clean_website(ctx):
+    """Remove all local website build products"""
+    ctx.run("rm -rf docs/*")
+
+    # if the website accidentally got onto the main branch we remove
+    # that crap too
+    for thing in [
+            '_images',
+            '_modules',
+            '_sources',
+            '_static',
+            'api',
+            'genindex.html',
+            'index.html',
+            'invoke.html',
+            'objects.inv',
+            'py-modindex.html',
+            'search.html',
+            'searchindex.js',
+            'source',
+            'tutorials',
+    ]:
+
+        ctx.run(f"rm -rf {thing}")
+
+@task(pre=[clean_cache, clean_dist, clean_docs, clean_website])
+def clean(ctx):
+    pass
+
+### Building and packaging
+
+@task
+def sdist(ctx):
+    """Make a source distribution"""
+    ctx.run("python setup.py sdist")
 
 
 @task
-def env_dev(ctx):
-    """Recreate from scratch the wepy development environment."""
+def conda_build(cx):
 
-    ctx.run(f"conda create -y -n {DEV_ENV} python={PYTHON_VERSION}",
-        pty=True)
+    cx.run("conda-build conda-recipe")
 
-    # install package
-    ctx.run(f"$ANACONDA_DIR/envs/{DEV_ENV}/bin/pip install -e .")
+### Docs
 
-    # install the dev dependencies
-    ctx.run(f"$ANACONDA_DIR/envs/{DEV_ENV}/bin/pip install -r requirements_dev.txt")
+@task
+def docs_build(ctx):
+    """Buld the documenation"""
+    ctx.run("(cd sphinx; ./build.sh)")
+
+@task(pre=[docs_build])
+def docs_serve(ctx):
+    """Local server for documenation"""
+    ctx.run("python -m http.server -d sphinx/_build/html")
+
+### TODO: WIP Website
+
+@task(pre=[clean_docs, clean_website, docs_build])
+def website_deploy_local(ctx):
+    """Deploy the docs locally for development. Must have bundler and jekyll installed"""
+
+    # WIP: a more landing page style website for wepy using jekyll
+    # which will have the docs linked to from it
+
+    ctx.cd("jekyll")
+
+    # update dependencies
+    ctx.run("bundle install")
+    ctx.run("bundle update")
+
+    # run the server
+    ctx.run("bundle exec jekyll serve")
+
+#@task(pre=[clean_docs, docs_build])
+@task
+def website_deploy(ctx):
+    """Deploy the documentation onto the internet."""
+
+    ctx.run("(cd sphinx; ./deploy.sh)")
+
+
+
+### Tests
+
+
+@task
+def tests_benchmarks(cx):
+    cx.run("(cd wepy-tests/tests/test_benchmarks && pytest -m 'not interactive')")
+
+@task
+def tests_integration(cx, node='dev'):
+    cx.run(f"(cd wepy-tests/tests/test_integration && pytest -m 'not interactive' -m 'node_{node}')")
+
+@task
+def tests_unit(cx, node='dev'):
+    cx.run(f"(cd wepy-tests/tests/test_unit && pytest -m 'not interactive' -m 'node_{node}')")
+
+@task
+def tests_interactive(cx):
+    """Run the interactive tests so we can play with things."""
+
+    cx.run("pytest -m 'interactive'")
+
+@task()
+def tests_all(cx, node='dev'):
+    """Run all the automated tests. No benchmarks.
+
+    There are different kinds of nodes that we can run on that
+    different kinds of tests are available for.
+
+    - minor : does not have a GPU, can still test most other code paths
+
+    - dev : has at least 1 GPU, enough for small tests of all code paths
+
+    - production : has multiple GPUs, good for running benchmarks
+                   and full stress tests
+
+    """
+
+
+    tests_unit(cx, node=node)
+    tests_integration(cx, node=node)
+
+@task
+def tests_tox(ctx):
+
+    NotImplemented
+
+    TOX_PYTHON_DIR=None
+
+    ctx.run("env PATH=\"{}/bin:$PATH\" tox".format(
+        TOX_PYTHON_DIR))
+
+### Code Quality
+
+@task
+def lint(ctx):
+
+    ctx.run("rm -f metrics/lint/flake8.txt")
+    ctx.run("flake8 --output-file=metrics/lint/flake8.txt src/wepy")
+
+@task
+def complexity(ctx):
+    """Analyze the complexity of the project."""
+
+    ctx.run("lizard -o metrics/code_quality/lizard.csv src/wepy")
+    ctx.run("lizard -o metrics/code_quality/lizard.html src/wepy")
+
+    # SNIPPET: annoyingly opens the browser
+
+    # make a cute word cloud of the things used
+    # ctx.run("(cd metrics/code_quality; lizard -EWordCount src/wepy > /dev/null)")
+
+@task(pre=[complexity, lint])
+def quality(ctx):
+    pass
+
+
+### Profiling and Performance
+
+@task
+def profile(ctx):
+    NotImplemented
+
+@task
+def benchmark_adhoc(ctx):
+    """An ad hoc benchmark that will not be saved."""
+
+    ctx.run("pytest wepy-tests/tests/test_benchmarks")
+
+@task
+def benchmark_save(ctx):
+    """Run a proper benchmark that will be saved into the metrics for regression testing etc."""
+
+    run_command = \
+f"""pytest --benchmark-autosave --benchmark-save-data \
+          --benchmark-storage={BENCHMARK_STORAGE_URI} \
+          wepy-tests/tests/test_benchmarks
+"""
+
+    ctx.run(run_command)
+
+@task
+def benchmark_compare(ctx):
+
+    # TODO logic for comparing across the last two
+
+    run_command = \
+"""pytest-benchmark \
+                    --storage {storage} \
+                    compare 'Linux-CPython-3.6-64bit/*' \
+                    --csv=\"{csv}\" \
+                    > {output}
+""".format(storage=BENCHMARK_STORAGE_URI,
+           csv="{}/Linux-CPython-3.6-64bit/comparison.csv".format(BENCHMARK_STORAGE_URL),
+           output="{}/Linux-CPython-3.6-64bit/report.pytest.txt".format(BENCHMARK_STORAGE_URL),
+)
+
+    ctx.run(run_command)
+
+
+### Releases
+
+
+## Pipeline
+
+# Run code quality metrics
+
+# Run Tests
+
+# Run Performance Regressions
+
+## version management
+
+@task
+def version_which(ctx):
+    """Tell me what version the project is at."""
+
+    # get the current version
+    import wepy
+    print(wepy.__version__)
+
+
+@task
+def version_set(ctx):
+    """Set the version with a custom string."""
+
+    print(NotImplemented)
+    NotImplemented
+
+
+# TODO: bumpversion is a flop don't use it. Just do a normal
+# replacement or do it manually
+@task
+def version_bump(ctx, level='patch', new_version=None):
+    """Incrementally increase the version number by specifying the bumpversion level."""
+
+    print(NotImplemented)
+    NotImplemented
+
+    if new_version is None:
+        # use the bumpversion utility
+        ctx.run(f"bumpversion --verbose "
+                f"--new-version {new_version}"
+                f"-m 'bumps version to {new_version}'"
+                f"{level}")
+
+    elif level is not None:
+        # use the bumpversion utility
+        ctx.run(f"bumpversion --verbose "
+                f"-m 'bumps version level: {level}'"
+                f"{level}")
+
+    else:
+        print("must either provide the level to bump or the version specifier")
+
+
+    # tag the git repo
+    ctx.run("git tag -a ")
+
+
+## Building
+
+# Source Distribution
+
+# Wheel: Binary Distribution
+
+# Beeware cross-patform
+
+# Debian Package (with `dh_virtualenv`)
+
+## Publishing
+
+# PyPI
+
+@task(pre=[sdist])
+def upload_pypi(ctx):
+    ctx.run('twine upload dist/*')
+
+
+# Conda Forge
+
+# TODO: convert to the regular conda forge repo when this is finished
+@task
+def conda_forge_recipe(cx):
+
+    print(NotImplemented)
+    NotImplemented
+
+    # TODO: somehow get this path right
+    CONDA_FORGE_RECIPE_PATH="../conda-forge_staged_recipe/recipes"
+    CONDA_FORGE_HASH_URL=""
+
+
+    # copy the recipe to the omnia fork
+    cx.run(f"cp conda/conda-forge {CONDA_FORGE_RECIPE_PATH}/{{ cookiecutter.project_name }}")
+
+    # commit and push
+    cx.run(f"git -C {CONDA_FORGE_RECIPE_PATH} commit -m 'update recipe'")
+    cx.run(f"git -C {CONDA_FORGE_RECIPE_PATH} push")
+    print(f"make a PR for this in the conda-forge conda recipes: {CONDA_FORGE_RECIPE_PATH}")
+

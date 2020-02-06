@@ -1,0 +1,7 @@
+* Credits
+
+** Development Lead
+
+{{ cookiecutter.owner_name  }} <{{ cookiecutter.owner_email }}>
+
+** Contributors
