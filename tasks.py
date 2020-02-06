@@ -11,18 +11,6 @@ CLEAN_EXPRESSIONS = [
     "\"*~\"",
 ]
 
-@task
-def render(cx):
-
-    render_date = datetime.utcnow()
-
-    context = {
-        'render_year' : render_date.year,
-        'render_timestamp' : render_date.isoformat()
-    }
-
-    cookiecutter('.',
-                 extra_context=context)
 
 # NOTE: in the future we will want to support a more general way of
 # doing this
@@ -55,3 +43,33 @@ def clean(cx):
     print("Deleting Targets")
     for clean_expr in CLEAN_EXPRESSIONS:
         cx.run('find . -type f -name {} -delete'.format(clean_expr))
+
+## Testing
+
+# SNIPPET
+#@task(pre=[clean], post=[test_rendered_repo])
+
+@task(pre=[clean])
+def test_render(cx, default=True, context=None):
+
+    cx.run("mkdir -p tests/_test_builds")
+
+    if default:
+        cx.run("cookiecutter -f --no-input -o tests/_test_builds/ .")
+    else:
+        cx.run("cookiecutter -f -o tests/_test_builds/ .")
+
+
+@task(pre=[test_render])
+def test_rendered_repo(cx, default=True, context=None):
+
+    default_name = "default_repo_name"
+    target_dir = f'tests/_test_builds/{default_name}'
+
+    with cx.cd(target_dir):
+
+        print("testing the generated repo is okay")
+        print(f"cd {target_dir}")
+
+        cx.run("inv -l", echo=True)
+        cx.run("inv repo-test", echo=True)

@@ -1,0 +1,40 @@
+package:
+  name: {{ cookiecutter.project_name }}
+  version: {{ cookiecutter.initial_version }}
+
+source:
+  fn: {{ cookiecutter.project_slug }}-{{ cookiecutter.initial_version }}.tar.gz
+  url: {{ cookiecutter.sdist_url }}/{% raw -%}{{ version }}/{{ name }}-{{ version }}.tar.gz{% endraw %}
+  # TODO: way to specify a hole or 
+  sha256:
+
+build:
+  number: 0
+  script: "{% raw -%}{{ PYTHON }}{% endraw %} -m pip install . -vv"
+  entry_points:
+    - {{ cookiecutter.project_slug }} = {{ cookiecutter.project_slug }}.cli:cli
+
+requirements:
+  build:
+    - python
+    - setuptools
+    - wheel
+
+  host:
+    - python
+    
+  run:
+    - python
+    
+
+about:
+  home: {{ cookiecutter.url }}
+  license: {{ cookiecutter.license }}
+  license_file: LICENSE
+  summary: "{{ cookiecutter.project_description }}"
+  doc_url: {{ cookiecutter.doc_url }}
+  dev_url: {{ cookiecutter.dev_url }}
+
+extra:
+  recipe-maintainers:
+    - {{ cookiecutter.owner_nickname }}

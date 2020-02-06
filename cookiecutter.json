@@ -1,7 +1,7 @@
 {
     "_extensions" : ["jinja2_time.TimeExtension"],
     "project_name" : "repo-name",
-    "package_slug" : "default_repo_name",
+    "project_slug" : "default_repo_name",
     "project_description" : "New Python Project",
     "initial_version" : "0.0.0a0.dev0",
     "copyright" : "BY-NC",

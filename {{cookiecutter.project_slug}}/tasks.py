@@ -29,18 +29,18 @@ def conda_env(cx, env_name='dev'):
 @task
 def env(cx, name='dev'):
 
-    env_name=f"wepy.{name}"
+    env_name=f"{{ cookiecutter.project_slug }}.{name}"
 
     conda_env(cx, env_name=env_name)
 
 ### Repo
 
 @task
-def submodule_tests(ctx):
-    """Retrieve the tests submodule if not already cloned."""
+def repo_test(cx):
 
-    ctx.run("git submodule update --init --recursive")
-    ctx.run("git -C wepy-tests checkout master")
+    # TODO: tests to run on the consistency and integrity of the repo
+    pass
+
 
 
 ### Dependencies
@@ -172,8 +172,6 @@ def docs_serve(ctx):
 def website_deploy_local(ctx):
     """Deploy the docs locally for development. Must have bundler and jekyll installed"""
 
-    # WIP: a more landing page style website for wepy using jekyll
-    # which will have the docs linked to from it
 
     ctx.cd("jekyll")
 
@@ -184,7 +182,7 @@ def website_deploy_local(ctx):
     # run the server
     ctx.run("bundle exec jekyll serve")
 
-#@task(pre=[clean_docs, docs_build])
+# STUB: @task(pre=[clean_docs, docs_build])
 @task
 def website_deploy(ctx):
     """Deploy the documentation onto the internet."""
@@ -198,15 +196,15 @@ def website_deploy(ctx):
 
 @task
 def tests_benchmarks(cx):
-    cx.run("(cd wepy-tests/tests/test_benchmarks && pytest -m 'not interactive')")
+    cx.run("(cd tests/test_benchmarks && pytest -m 'not interactive')")
 
 @task
 def tests_integration(cx, node='dev'):
-    cx.run(f"(cd wepy-tests/tests/test_integration && pytest -m 'not interactive' -m 'node_{node}')")
+    cx.run(f"(cd tests/test_integration && pytest -m 'not interactive' -m 'node_{node}')")
 
 @task
 def tests_unit(cx, node='dev'):
-    cx.run(f"(cd wepy-tests/tests/test_unit && pytest -m 'not interactive' -m 'node_{node}')")
+    cx.run(f"(cd tests/test_unit && pytest -m 'not interactive' -m 'node_{node}')")
 
 @task
 def tests_interactive(cx):
@@ -250,19 +248,19 @@ def tests_tox(ctx):
 def lint(ctx):
 
     ctx.run("rm -f metrics/lint/flake8.txt")
-    ctx.run("flake8 --output-file=metrics/lint/flake8.txt src/wepy")
+    ctx.run("flake8 --output-file=metrics/lint/flake8.txt src/{{ cookiecutter.project_slug }}")
 
 @task
 def complexity(ctx):
     """Analyze the complexity of the project."""
 
-    ctx.run("lizard -o metrics/code_quality/lizard.csv src/wepy")
-    ctx.run("lizard -o metrics/code_quality/lizard.html src/wepy")
+    ctx.run("lizard -o metrics/code_quality/lizard.csv src/{{ cookiecutter.project_slug }}")
+    ctx.run("lizard -o metrics/code_quality/lizard.html src/{{ cookiecutter.project_slug }}")
 
     # SNIPPET: annoyingly opens the browser
 
     # make a cute word cloud of the things used
-    # ctx.run("(cd metrics/code_quality; lizard -EWordCount src/wepy > /dev/null)")
+    # ctx.run("(cd metrics/code_quality; lizard -EWordCount src/{{ cookiecutter.project_slug }} > /dev/null)")
 
 @task(pre=[complexity, lint])
 def quality(ctx):
@@ -279,7 +277,7 @@ def profile(ctx):
 def benchmark_adhoc(ctx):
     """An ad hoc benchmark that will not be saved."""
 
-    ctx.run("pytest wepy-tests/tests/test_benchmarks")
+    ctx.run("pytest tests/test_benchmarks")
 
 @task
 def benchmark_save(ctx):
@@ -288,7 +286,7 @@ def benchmark_save(ctx):
     run_command = \
 f"""pytest --benchmark-autosave --benchmark-save-data \
           --benchmark-storage={BENCHMARK_STORAGE_URI} \
-          wepy-tests/tests/test_benchmarks
+          tests/test_benchmarks
 """
 
     ctx.run(run_command)
@@ -330,8 +328,8 @@ def version_which(ctx):
     """Tell me what version the project is at."""
 
     # get the current version
-    import wepy
-    print(wepy.__version__)
+    import {{ cookiecutter.project_slug }}
+    print({{ cookiecutter.project_slug }}.__version__)
 
 
 @task
