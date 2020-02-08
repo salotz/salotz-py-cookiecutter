@@ -1,5 +1,10 @@
 from invoke import task
+
 import sys
+import os
+import os.path as osp
+from pathlib import Path
+
 
 PYTHON_VERSION = '{{ cookiecutter.pyversion }}'
 
@@ -7,53 +12,109 @@ BENCHMARK_STORAGE_URL="./metrics/benchmarks"
 BENCHMARK_STORAGE_URI="\"file://{}\"".format(BENCHMARK_STORAGE_URL)
 
 
+VENV_DIR = "_venv"
+
+SELF_REQUIREMENTS = 'self.requirements.txt'
+
 ### Environments
 
-def conda_env(cx, env_name='dev'):
+def conda_env(cx, name='dev'):
+
+    env_name = f"{{ cookiecutter.project_slug }}.{name}"
+
+    env_spec_path = Path("envs") / name
+
     cx.run(f"conda create -y -n {env_name} python={PYTHON_VERSION}",
         pty=True)
 
+    # install the conda dependencies
+    if osp.exists(f"{env_spec_path}/env.yaml"):
+        cx.run(f"conda env update -n {env_name} --file {env_spec_path}/env.yaml")
+
     # install the extra pip dependencies
-    cx.run(f"$ANACONDA_DIR/envs/{env_name}/bin/pip install -r envs/{name}.requirements.txt")
+    if osp.exists(f"{env_spec_path}/requirements.txt"):
+        cx.run(f"$ANACONDA_DIR/envs/{env_name}/bin/pip install -r {env_spec_path}/requirements.txt")
 
-    # install the conda dev dependencies
-    cx.run(f"conda env update -n {env_name} --file envs/{name}.env.yaml")
-
-
-    # # install the pip tools dependencies
-    # cx.run(f"$ANACONDA_DIR/envs/{env_name}/bin/pip install -r tools.requirements.txt")
+    # install the package itself
+    if osp.exists(f"{env_spec_path}/self.requirements.txt"):
+        cx.run(f"$ANACONDA_DIR/envs/{env_name}/bin/pip install -r {env_spec_path}/self.requirements.txt")
 
     print("--------------------------------------------------------------------------------")
     print(f"run: conda activate {env_name}")
 
+def venv_env(cx, name='dev'):
+
+    venv_dir_path = Path(VENV_DIR)
+    venv_path = venv_dir_path / name
+
+    env_spec_path = Path("envs") / name
+
+    # ensure the directory
+    cx.run(f"mkdir -p {venv_dir_path}")
+
+    # create the env requested
+    cx.run(f"python -m venv {venv_path}")
+
+    # then install the things we need
+    with cx.prefix(f"source {venv_path}/bin/activate"):
+
+        if osp.exists(f"{env_spec_path}/{SELF_REQUIREMENTS}"):
+            cx.run(f"pip install -r {env_spec_path}/requirements.txt")
+
+        else:
+            print("No requirements.txt found")
+
+        # if there is a 'self.requirements.txt' file specifying how to
+        # install the package that is being worked on install it
+        if osp.exists(f"{env_spec_path}/{SELF_REQUIREMENTS}"):
+            cx.run(f"pip install -r {env_spec_path}/{SELF_REQUIREMENTS}")
+
+        else:
+            print("No self.requirements.txt found")
+
+    print("----------------------------------------")
+    print("to activate run:")
+    print(f"source {venv_path}/bin/activate")
+
 @task
 def env(cx, name='dev'):
 
-    env_name=f"{{ cookiecutter.project_slug }}.{name}"
+    env_name = f"{{ cookiecutter.project_slug }}.{name}"
 
-    conda_env(cx, env_name=env_name)
+    # choose your method:
+
+    # SNIPPET
+    # conda_env(cx, name=name)
+
+    venv_env(cx, name=name)
 
 ### Repo
 
-@task
+@task(pre=[env,])
 def repo_test(cx):
 
     # TODO: tests to run on the consistency and integrity of the repo
-    pass
 
-
+    # prefix all of these tests by activating the dev environment
+    with cx.prefix(" {{cookiecutter.project_slug}}.dev"):
+        cx.run("conda activate {{cookiecutter.project_slug}}.dev && inv -l",
+               pty=True)
 
 ### Dependencies
 # managing dependencies for the project at runtime
 
 ## pip: things that can be controlled by pip
 
-@task
-def deps_pip_pin(cx):
+# TODO: modify so that it is managing the envs in the 'envs' dir
 
-    cx.run("python -m piptools compile "
-           "--output-file=requirements.txt "
-           f"requirements.in")
+@task
+def deps_pip_pin(cx, name='dev'):
+
+    path = Path("envs") / name
+
+    cx.run("pip-compile "
+           f"--output-file={path}/requirements.txt "
+           f"{path}/requirements.in")
 
     # SNIPPET: generate hashes is not working right, or just confusing me
     # cx.run("python -m piptools compile "
@@ -62,59 +123,69 @@ def deps_pip_pin(cx):
     #        f"requirements.in")
 
 @task
-def deps_pip_update(cx):
+def deps_pip_update(cx, name='dev'):
+
+    path = Path("envs") / name
 
     cx.run("python -m piptools compile "
            "--upgrade "
-           "--output-file=requirements.txt "
-           f"requirements.in")
+           f"--output-file={path}/requirements.txt "
+           f"{path}/requirements.in")
 
 ## conda: managing conda dependencies
 
 # STUB
 @task
-def deps_conda_pin(ctx):
+def deps_conda_pin(cx):
     pass
 
 # STUB
 @task
-def deps_conda_update(ctx):
+def deps_conda_update(cx):
     pass
 
-## altogether
-@task(pre=[deps_pip_pin, deps_conda_pin])
-def deps_pin(cx):
-    pass
+# altogether
+@task
+def deps_pin(cx, name='dev'):
 
-@task(pre=[deps_pip_update, deps_conda_update])
-def deps_pin_update(cx):
-    pass
+    deps_pip_pin(cx, name=name)
+
+    # SNIPPET
+    # deps_conda_pin(cx, name=name)
+
+@task
+def deps_pin_update(cx, name='dev'):
+    deps_pip_update(cx, name=name)
+
+    # SNIPPET
+    # deps_conda_update(cx, name=name)
 
 
 
 ### Cleaning
 
 @task
-def clean_dist(ctx):
+def clean_dist(cx):
     """Remove all build products."""
 
-    ctx.run("rm -rf dist build */*.egg-info *.egg-info")
+    cx.run("python setup.py clean")
+    cx.run("rm -rf dist build */*.egg-info *.egg-info")
 
 @task
-def clean_cache(ctx):
+def clean_cache(cx):
     """Remove all of the __pycache__ files in the packages."""
-    ctx.run('find . -name "__pycache__" -exec rm -r {} +')
+    cx.run('find . -name "__pycache__" -exec rm -r {} +')
 
 @task
-def clean_docs(ctx):
+def clean_docs(cx):
     """Remove all documentation build products"""
 
-    ctx.run("rm -rf sphinx/_build/*")
+    cx.run("rm -rf sphinx/_build/*")
 
 @task
-def clean_website(ctx):
+def clean_website(cx):
     """Remove all local website build products"""
-    ctx.run("rm -rf docs/*")
+    cx.run("rm -rf docs/*")
 
     # if the website accidentally got onto the main branch we remove
     # that crap too
@@ -135,59 +206,47 @@ def clean_website(ctx):
             'tutorials',
     ]:
 
-        ctx.run(f"rm -rf {thing}")
+        cx.run(f"rm -rf {thing}")
 
 @task(pre=[clean_cache, clean_dist, clean_docs, clean_website])
-def clean(ctx):
+def clean(cx):
     pass
 
-### Building and packaging
-
-@task
-def sdist(ctx):
-    """Make a source distribution"""
-    ctx.run("python setup.py sdist")
-
-
-@task
-def conda_build(cx):
-
-    cx.run("conda-build conda-recipe")
 
 ### Docs
 
 @task
-def docs_build(ctx):
+def docs_build(cx):
     """Buld the documenation"""
-    ctx.run("(cd sphinx; ./build.sh)")
+    cx.run("(cd sphinx; ./build.sh)")
 
 @task(pre=[docs_build])
-def docs_serve(ctx):
+def docs_serve(cx):
     """Local server for documenation"""
-    ctx.run("python -m http.server -d sphinx/_build/html")
+    cx.run("python -m http.server -d sphinx/_build/html")
 
 ### TODO: WIP Website
 
 @task(pre=[clean_docs, clean_website, docs_build])
-def website_deploy_local(ctx):
+def website_deploy_local(cx):
     """Deploy the docs locally for development. Must have bundler and jekyll installed"""
 
 
-    ctx.cd("jekyll")
+    cx.cd("jekyll")
 
     # update dependencies
-    ctx.run("bundle install")
-    ctx.run("bundle update")
+    cx.run("bundle install")
+    cx.run("bundle update")
 
     # run the server
-    ctx.run("bundle exec jekyll serve")
+    cx.run("bundle exec jekyll serve")
 
 # STUB: @task(pre=[clean_docs, docs_build])
 @task
-def website_deploy(ctx):
+def website_deploy(cx):
     """Deploy the documentation onto the internet."""
 
-    ctx.run("(cd sphinx; ./deploy.sh)")
+    cx.run("(cd sphinx; ./deploy.sh)")
 
 
 
@@ -233,54 +292,54 @@ def tests_all(cx, node='dev'):
     tests_integration(cx, node=node)
 
 @task
-def tests_tox(ctx):
+def tests_tox(cx):
 
     NotImplemented
 
     TOX_PYTHON_DIR=None
 
-    ctx.run("env PATH=\"{}/bin:$PATH\" tox".format(
+    cx.run("env PATH=\"{}/bin:$PATH\" tox".format(
         TOX_PYTHON_DIR))
 
 ### Code Quality
 
 @task
-def lint(ctx):
+def lint(cx):
 
-    ctx.run("rm -f metrics/lint/flake8.txt")
-    ctx.run("flake8 --output-file=metrics/lint/flake8.txt src/{{ cookiecutter.project_slug }}")
+    cx.run("rm -f metrics/lint/flake8.txt")
+    cx.run("flake8 --output-file=metrics/lint/flake8.txt src/{{ cookiecutter.project_slug }}")
 
 @task
-def complexity(ctx):
+def complexity(cx):
     """Analyze the complexity of the project."""
 
-    ctx.run("lizard -o metrics/code_quality/lizard.csv src/{{ cookiecutter.project_slug }}")
-    ctx.run("lizard -o metrics/code_quality/lizard.html src/{{ cookiecutter.project_slug }}")
+    cx.run("lizard -o metrics/code_quality/lizard.csv src/{{ cookiecutter.project_slug }}")
+    cx.run("lizard -o metrics/code_quality/lizard.html src/{{ cookiecutter.project_slug }}")
 
     # SNIPPET: annoyingly opens the browser
 
     # make a cute word cloud of the things used
-    # ctx.run("(cd metrics/code_quality; lizard -EWordCount src/{{ cookiecutter.project_slug }} > /dev/null)")
+    # cx.run("(cd metrics/code_quality; lizard -EWordCount src/{{ cookiecutter.project_slug }} > /dev/null)")
 
 @task(pre=[complexity, lint])
-def quality(ctx):
+def quality(cx):
     pass
 
 
 ### Profiling and Performance
 
 @task
-def profile(ctx):
+def profile(cx):
     NotImplemented
 
 @task
-def benchmark_adhoc(ctx):
+def benchmark_adhoc(cx):
     """An ad hoc benchmark that will not be saved."""
 
-    ctx.run("pytest tests/test_benchmarks")
+    cx.run("pytest tests/test_benchmarks")
 
 @task
-def benchmark_save(ctx):
+def benchmark_save(cx):
     """Run a proper benchmark that will be saved into the metrics for regression testing etc."""
 
     run_command = \
@@ -289,10 +348,10 @@ f"""pytest --benchmark-autosave --benchmark-save-data \
           tests/test_benchmarks
 """
 
-    ctx.run(run_command)
+    cx.run(run_command)
 
 @task
-def benchmark_compare(ctx):
+def benchmark_compare(cx):
 
     # TODO logic for comparing across the last two
 
@@ -307,7 +366,7 @@ def benchmark_compare(ctx):
            output="{}/Linux-CPython-3.6-64bit/report.pytest.txt".format(BENCHMARK_STORAGE_URL),
 )
 
-    ctx.run(run_command)
+    cx.run(run_command)
 
 
 ### Releases
@@ -324,7 +383,7 @@ def benchmark_compare(ctx):
 ## version management
 
 @task
-def version_which(ctx):
+def version_which(cx):
     """Tell me what version the project is at."""
 
     # get the current version
@@ -333,7 +392,7 @@ def version_which(ctx):
 
 
 @task
-def version_set(ctx):
+def version_set(cx):
     """Set the version with a custom string."""
 
     print(NotImplemented)
@@ -343,7 +402,7 @@ def version_set(ctx):
 # TODO: bumpversion is a flop don't use it. Just do a normal
 # replacement or do it manually
 @task
-def version_bump(ctx, level='patch', new_version=None):
+def version_bump(cx, level='patch', new_version=None):
     """Incrementally increase the version number by specifying the bumpversion level."""
 
     print(NotImplemented)
@@ -351,14 +410,14 @@ def version_bump(ctx, level='patch', new_version=None):
 
     if new_version is None:
         # use the bumpversion utility
-        ctx.run(f"bumpversion --verbose "
+        cx.run(f"bumpversion --verbose "
                 f"--new-version {new_version}"
                 f"-m 'bumps version to {new_version}'"
                 f"{level}")
 
     elif level is not None:
         # use the bumpversion utility
-        ctx.run(f"bumpversion --verbose "
+        cx.run(f"bumpversion --verbose "
                 f"-m 'bumps version level: {level}'"
                 f"{level}")
 
@@ -367,10 +426,15 @@ def version_bump(ctx, level='patch', new_version=None):
 
 
     # tag the git repo
-    ctx.run("git tag -a ")
+    cx.run("git tag -a ")
 
+
+
+### Packaging
 
 ## Building
+
+# IDEA here are some ideas I want to do
 
 # Source Distribution
 
@@ -380,13 +444,53 @@ def version_bump(ctx, level='patch', new_version=None):
 
 # Debian Package (with `dh_virtualenv`)
 
+@task
+def update_tools(cx):
+    cx.run("pip install --upgrade pip setuptools wheel twine")
+
+@task(pre=[update_tools])
+def build_sdist(cx):
+    """Make a source distribution"""
+    cx.run("python setup.py sdist")
+
+@task(pre=[update_tools])
+def build_bdist(cx):
+    """Make a binary wheel distribution."""
+
+    cx.run("python setup.py bdist_wheel")
+
+# STUB
+@task
+def conda_build(cx):
+
+    cx.run("conda-build conda-recipe")
+
+@task(pre=[build_sdist, build_bdist,])
+def build(cx):
+    """Build all the python distributions supported."""
+    pass
+
+## uploading distribution archives
+
+# testing
+
+TESTING_INDEX_URL = "https://test.pypi.org/legacy/"
+
+@task(pre=[update_tools, build])
+def test_upload(cx):
+
+    cx.run("twine upload "
+           f"--repository-url {TESTING_INDEX_URL} "
+           "dist/*")
+
+
 ## Publishing
 
 # PyPI
 
-@task(pre=[sdist])
-def upload_pypi(ctx):
-    ctx.run('twine upload dist/*')
+@task(pre=[build_sdist])
+def upload_pypi(cx):
+    cx.run('twine upload dist/*')
 
 
 # Conda Forge

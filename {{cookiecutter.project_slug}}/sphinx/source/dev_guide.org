@@ -17,15 +17,14 @@ To make things easier for developers we provide a set automation
 scripts implemented in ~invoke~ (similar to a makefile if you are
 familiar with that).
 
-So you will want to install invoke somehow to use this tooling. The
-easiest most contained way to do this we have found is to use ~pipx~:
+So you will want to install invoke somehow to use this tooling. So
+make sure you are in a suitable python environment (i.e. not the
+systems python) and install the tools in the ~tools.requirements.txt~
+file.
 
 #+begin_src bash
-pipx install invoke
+pip install -r tools.requirements.txt
 #+end_src
-
-# TODO: support installing straight from the requirements.txt
-
 
 *** Virtual Environments
 
@@ -49,11 +48,8 @@ To create an env called ~{{ cookiecutter.project_name }}.dev~ just run the ~env~
 inv env
 #+end_src
 
-Then activate it:
-
-#+begin_src bash
-conda activate {{ cookiecutter.project_name }}.dev
-#+end_src
+Then follow the activation instructions that are printed as different
+projects might use different backends.
 
 If you ever have problems with an environment just rerun this to get a
 clean one. A practice we encourage to do frequently so that developers
@@ -71,7 +67,6 @@ instance:
 
 #+begin_src bash
 inv env -n base
-conda activate {{ cookiecutter.project_name }}.base
 #+end_src
 
 If you want to make another environment it is straightforward to copy
@@ -200,7 +195,6 @@ inv quality
 This will write files to ~metrics~.
 
 *** Releases
-
 
 **** Choosing a version number
 

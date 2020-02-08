@@ -50,12 +50,20 @@ def clean(cx):
 #@task(pre=[clean], post=[test_rendered_repo])
 
 @task(pre=[clean])
-def test_render(cx, default=True, context=None):
+def test_render(cx, default=True, context_file=None):
 
     cx.run("mkdir -p tests/_test_builds")
 
     if default:
         cx.run("cookiecutter -f --no-input -o tests/_test_builds/ .")
+
+    # read from a JSON file
+    elif context_file is not None:
+        assert osp.exists(context_file), f"context file {context_file} doesn't exist"
+
+        cx.run(f"cookiecutter -f --no-input -o tests/_test_builds/ . {context}")
+
+    # otherwise do interactively
     else:
         cx.run("cookiecutter -f -o tests/_test_builds/ .")
 
@@ -70,6 +78,4 @@ def test_rendered_repo(cx, default=True, context=None):
 
         print("testing the generated repo is okay")
         print(f"cd {target_dir}")
-
-        cx.run("inv -l", echo=True)
         cx.run("inv repo-test", echo=True)

@@ -2,12 +2,9 @@
 
 ** Installation
 
-There is no specific package to install just make sure you have
-cookiecutter installed, roughly:
-
-#+begin_src bash
-pip install cookiecutter
-#+end_src
+Install the tools necessary which are specified in the
+[[file:requirements.txt][requirements.txt]] file, which is just cookiecutter and any plugins we
+might need.
 
 Then you can just make repos from the template:
 
@@ -24,8 +21,44 @@ which should be in the sphinx documentation:
 
 * Development Guide
 
+# TODO: move this strategy upstream to the meta-cookicutter
+
 You can test generating things with this target:
 
 #+begin_src bash
 inv test-render
+#+end_src
+
+Once you generate a project it should have a target in it to test
+itself which will bootstrap the ~dev~ environment and then run other
+inv targets in it.
+
+#+begin_src bash
+inv test-render
+cd tests/_test_builds/default_repo_name
+inv repo-test
+#+end_src
+
+Which you can run with just one target from the
+~salotz-py-cookiecutter~ repo:
+
+#+begin_src bash
+inv test-rendered-repo
+#+end_src
+
+
+If you want to test a particular thing that isn't in that target we
+have found the following one-liners pretty helpful.
+
+Initially render the test and move there
+
+#+begin_src bash
+inv test-render && cd tests/_test_builds/default_repo_name
+#+end_src
+
+Then to quickly re-render and put you back in the same location
+afterwards:
+
+#+begin_src bash
+(cd -; inv test-render)
 #+end_src
