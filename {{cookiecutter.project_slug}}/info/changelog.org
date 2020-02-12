@@ -16,7 +16,7 @@ See the git commit log history for full details.
 *** Growth
 
 
-** [{{cookiecutter.initial_release}}] - {% now 'local' %}
+** [{{cookiecutter.initial_version}}] - {% now 'local' %}
 
 *** Breakages
 

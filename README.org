@@ -18,6 +18,12 @@ Once you have generated a project see the dev guide produced there
 which should be in the sphinx documentation:
 ~sphinx/source/dev_guide.org~.
 
+** Usage
+
+See the developer's guide in the info directory of your generated
+project. The [[file:./{{cookiecutter.project_slug}}/info/dev_guide.org][template]] version is here if you want to see it before
+generation.
+
 
 * Development Guide
 
@@ -63,7 +69,7 @@ afterwards:
 deactivate; (cd -; inv test-render)
 #+end_src
 
-Typically, you need to:
+For testing the full development cycle we need to:
 
 - initialize version control
 - compile dependencies for env
@@ -71,6 +77,9 @@ Typically, you need to:
 - test
 - build
 - release
+  - write changelog
+  - write announcement
+  - tag the git commit
 - publish
 
 #+begin_src bash
@@ -84,8 +93,16 @@ inv test-all
 inv docs-serve
 #+end_src
 
-To make a release:
+An example change to make would be to add this file to the
+~src/wumpus~ folder:
+
+#+begin_src python
+if __name__ == "__main__":
+
+    print("Hello! My name is Wumpus! Lets be friends!")
+
+#+end_src
 
 #+begin_src bash
-inv 
+python -m wumpus.main
 #+end_src

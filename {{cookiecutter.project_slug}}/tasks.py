@@ -16,11 +16,17 @@ VENV_DIR = "_venv"
 
 SELF_REQUIREMENTS = 'self.requirements.txt'
 
+VCS_RELEASE_TAG_TEMPLATE = "v{}"
+
 ### Version Control
 
 @task
 def vcs_init(cx):
-    cx.run("git init && git add -A && git commit -m 'initial commit' && git tag -a {{cookiecutter.initial_version}}")
+
+    initial_version = "{{cookiecutter.initial_version}}"
+    tag_string = VCS_RELEASE_TAG_TEMPLATE.format(initial_version)
+
+    cx.run("git init && git add -A && git commit -m 'initial commit' && git tag -a {tag_string} -m 'initialization release'")
 
 ### Environments
 
@@ -155,6 +161,8 @@ def deps_conda_update(cx):
 def deps_pin(cx, name='dev'):
 
     deps_pip_pin(cx, name=name)
+
+    cx.run(f"git add -A && git commit -m 'pinned dependencies for the env: {name}'")
 
     # SNIPPET
     # deps_conda_pin(cx, name=name)
@@ -393,8 +401,8 @@ def version_which(cx):
     """Tell me what version the project is at."""
 
     # get the current version
-    import {{ cookiecutter.project_slug }}
-    print({{ cookiecutter.project_slug }}.__version__)
+    from {{ cookiecutter.project_slug }} import __version__ as proj_version
+    print(proj_version)
 
 # SNIPPET: not implemented yet
 
@@ -441,16 +449,27 @@ def release_tag(cx, release=None):
 
     assert release is not None, "Release tag string must be given"
 
-    cx.run(f"git tag {release}")
+    tag_string = VCS_RELEASE_TAG_TEMPLATE.format(release)
+
+    cx.run(f"git tag -a {tag_string} -m 'See the changelog for details'")
+
 
 @task
-def release(cx, release=None):
+def release(cx):
 
-    assert release is not None, "Release tag string must be given"
+    # get the release version from the module
+    from {{cookiecutter.project_slug}} import __version__ as proj_version
 
-    release_tag(cx, release=release)
+    # SNIPPET
+    # cx.run("python -m wumpus.version")
+
+    print("Releasing: ", proj_version)
+
+    release_tag(cx, release=proj_version)
+
 
     # IDEA, TODO: handle the manual checklist of things
+
 
 ### Packaging
 
@@ -500,16 +519,27 @@ def build(cx):
 
 TESTING_INDEX_URL = "https://test.pypi.org/legacy/"
 
-@task
-def publish_test_pypi(cx):
+@task(pre=[clean_dist, build])
+def publish_test_pypi(cx, version=None):
+
+    assert version is not None
 
     cx.run("twine upload "
            f"--repository-url {TESTING_INDEX_URL} "
            "dist/*")
 
+    # TODO: make it so that you don't have to throw out old dists and
+    # just submit the ones we need for this version
 
-@task(pre=[update_tools, build])
+    # cx.run("twine upload "
+    #        f"--repository-url {TESTING_INDEX_URL} "
+    #        "dist/{{cookiecutter.project_name}}-{version}*")
+
+
+@task(pre=[clean_dist, update_tools, build])
 def publish_test(cx):
+
+    from {{cookiecutter.project_slug}} import __version__ as proj_version
 
     publish_test_pypi(cx)
 
@@ -517,36 +547,59 @@ def publish_test(cx):
 
 PYPI_INDEX_URL = "https://pypi.org//"
 
-@task(pre=[build_sdist])
-def publish_pypi(cx):
+@task(pre=[clean_dist, build])
+def publish_pypi(cx, version=None):
+
+    assert version is not None
+
     cx.run(f"twine upload "
            f"--repository-url {PYPI_INDEX_URL} "
-           f"dist/*')
+           f"dist/*")
 
 
-@task(pre=[update_tools, build])
-def publish(cx):
-    publish_test_pypi(cx)
+@task
+def publish_tags(cx, version=None):
+    assert version is not None
+
+    tag_string = VCS_RELEASE_TAG_TEMPLATE.format(version)
+
+    cx.run(f"git push origin {tag_string}")
+
+# TODO, SNIPPET, STUB: this is a desired target for uploading dists to github
+# @task
+# def publish_github_dists(cx, release=None):
+#     assert release is not None, "Release tag string must be given"
+#     pass
+
+@task(pre=[clean_dist, update_tools, build])
+def publish(cx, version=None):
+
+    # assume the latest
+    if version is None:
+        from {{cookiecutter.project_slug}} import __version__ as version
+
+    publish_tags(cx, version=version)
+    publish_pypi(cx, version=version)
 
 # Conda Forge
 
 # TODO: convert to the regular conda forge repo when this is finished
-@task
-def conda_forge_recipe(cx):
+# @task
+# def conda_forge_recipe(cx):
 
-    print(NotImplemented)
-    NotImplemented
+#     print(NotImplemented)
+#     NotImplemented
 
-    # TODO: somehow get this path right
-    CONDA_FORGE_RECIPE_PATH="../conda-forge_staged_recipe/recipes"
-    CONDA_FORGE_HASH_URL=""
+#     # TODO: somehow get this path right
+#     CONDA_FORGE_RECIPE_PATH="../conda-forge_staged_recipe/recipes"
+#     CONDA_FORGE_HASH_URL=""
 
 
-    # copy the recipe to the omnia fork
-    cx.run(f"cp conda/conda-forge {CONDA_FORGE_RECIPE_PATH}/{{ cookiecutter.project_name }}")
+#     # copy the recipe to the omnia fork
+#     cx.run(f"cp conda/conda-forge {CONDA_FORGE_RECIPE_PATH}/{{ cookiecutter.project_name }}")
 
-    # commit and push
-    cx.run(f"git -C {CONDA_FORGE_RECIPE_PATH} commit -m 'update recipe'")
-    cx.run(f"git -C {CONDA_FORGE_RECIPE_PATH} push")
-    print(f"make a PR for this in the conda-forge conda recipes: {CONDA_FORGE_RECIPE_PATH}")
+#     # commit and push
+#     cx.run(f"git -C {CONDA_FORGE_RECIPE_PATH} commit -m 'update recipe'")
+#     cx.run(f"git -C {CONDA_FORGE_RECIPE_PATH} push")
+#     print(f"make a PR for this in the conda-forge conda recipes: {CONDA_FORGE_RECIPE_PATH}")
 

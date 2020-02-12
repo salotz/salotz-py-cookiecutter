@@ -38,8 +38,14 @@ def ls_clean(cx):
     for clean_expr in CLEAN_EXPRESSIONS:
         cx.run('find . -type f -name {} -print'.format(clean_expr))
 
-@task(ls_clean)
+@task
+def clean_tests(cx):
+
+    cx.run("rm -rf tests/_test_builds")
+
+@task(pre=[ls_clean, clean_tests])
 def clean(cx):
+
     print("Deleting Targets")
     for clean_expr in CLEAN_EXPRESSIONS:
         cx.run('find . -type f -name {} -delete'.format(clean_expr))
