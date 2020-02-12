@@ -16,6 +16,12 @@ VENV_DIR = "_venv"
 
 SELF_REQUIREMENTS = 'self.requirements.txt'
 
+### Version Control
+
+@task
+def vcs_init(cx):
+    cx.run("git init && git add -A && git commit -m 'initial commit' && git tag -a {{cookiecutter.initial_version}}")
+
 ### Environments
 
 def conda_env(cx, name='dev'):
@@ -255,15 +261,15 @@ def website_deploy(cx):
 
 @task
 def tests_benchmarks(cx):
-    cx.run("(cd tests/test_benchmarks && pytest -m 'not interactive')")
+    cx.run("(cd tests/tests/test_benchmarks && pytest -m 'not interactive')")
 
 @task
 def tests_integration(cx, node='dev'):
-    cx.run(f"(cd tests/test_integration && pytest -m 'not interactive' -m 'node_{node}')")
+    cx.run(f"(cd tests/tests/test_integration && pytest -m 'not interactive' -m 'node_{node}')")
 
 @task
 def tests_unit(cx, node='dev'):
-    cx.run(f"(cd tests/test_unit && pytest -m 'not interactive' -m 'node_{node}')")
+    cx.run(f"(cd tests/tests/test_unit && pytest -m 'not interactive' -m 'node_{node}')")
 
 @task
 def tests_interactive(cx):
@@ -336,7 +342,7 @@ def profile(cx):
 def benchmark_adhoc(cx):
     """An ad hoc benchmark that will not be saved."""
 
-    cx.run("pytest tests/test_benchmarks")
+    cx.run("pytest tests/tests/test_benchmarks")
 
 @task
 def benchmark_save(cx):
@@ -345,7 +351,7 @@ def benchmark_save(cx):
     run_command = \
 f"""pytest --benchmark-autosave --benchmark-save-data \
           --benchmark-storage={BENCHMARK_STORAGE_URI} \
-          tests/test_benchmarks
+          tests/tests/test_benchmarks
 """
 
     cx.run(run_command)
@@ -390,45 +396,61 @@ def version_which(cx):
     import {{ cookiecutter.project_slug }}
     print({{ cookiecutter.project_slug }}.__version__)
 
+# SNIPPET: not implemented yet
+
+# @task
+# def version_set(cx):
+#     """Set the version with a custom string."""
+
+#     print(NotImplemented)
+#     NotImplemented
+
+
+# # TODO: bumpversion is a flop don't use it. Just do a normal
+# # replacement or do it manually
+# @task
+# def version_bump(cx, level='patch', new_version=None):
+#     """Incrementally increase the version number by specifying the bumpversion level."""
+
+#     print(NotImplemented)
+#     NotImplemented
+
+#     if new_version is None:
+#         # use the bumpversion utility
+#         cx.run(f"bumpversion --verbose "
+#                 f"--new-version {new_version}"
+#                 f"-m 'bumps version to {new_version}'"
+#                 f"{level}")
+
+#     elif level is not None:
+#         # use the bumpversion utility
+#         cx.run(f"bumpversion --verbose "
+#                 f"-m 'bumps version level: {level}'"
+#                 f"{level}")
+
+#     else:
+#         print("must either provide the level to bump or the version specifier")
+
+
+#     # tag the git repo
+#     cx.run("git tag -a ")
+
 
 @task
-def version_set(cx):
-    """Set the version with a custom string."""
+def release_tag(cx, release=None):
 
-    print(NotImplemented)
-    NotImplemented
+    assert release is not None, "Release tag string must be given"
 
+    cx.run(f"git tag {release}")
 
-# TODO: bumpversion is a flop don't use it. Just do a normal
-# replacement or do it manually
 @task
-def version_bump(cx, level='patch', new_version=None):
-    """Incrementally increase the version number by specifying the bumpversion level."""
+def release(cx, release=None):
 
-    print(NotImplemented)
-    NotImplemented
+    assert release is not None, "Release tag string must be given"
 
-    if new_version is None:
-        # use the bumpversion utility
-        cx.run(f"bumpversion --verbose "
-                f"--new-version {new_version}"
-                f"-m 'bumps version to {new_version}'"
-                f"{level}")
+    release_tag(cx, release=release)
 
-    elif level is not None:
-        # use the bumpversion utility
-        cx.run(f"bumpversion --verbose "
-                f"-m 'bumps version level: {level}'"
-                f"{level}")
-
-    else:
-        print("must either provide the level to bump or the version specifier")
-
-
-    # tag the git repo
-    cx.run("git tag -a ")
-
-
+    # IDEA, TODO: handle the manual checklist of things
 
 ### Packaging
 
@@ -470,28 +492,41 @@ def build(cx):
     """Build all the python distributions supported."""
     pass
 
-## uploading distribution archives
 
-# testing
+
+## Publishing
+
+# testing publishing
 
 TESTING_INDEX_URL = "https://test.pypi.org/legacy/"
 
-@task(pre=[update_tools, build])
-def test_upload(cx):
+@task
+def publish_test_pypi(cx):
 
     cx.run("twine upload "
            f"--repository-url {TESTING_INDEX_URL} "
            "dist/*")
 
 
-## Publishing
+@task(pre=[update_tools, build])
+def publish_test(cx):
+
+    publish_test_pypi(cx)
 
 # PyPI
 
-@task(pre=[build_sdist])
-def upload_pypi(cx):
-    cx.run('twine upload dist/*')
+PYPI_INDEX_URL = "https://pypi.org//"
 
+@task(pre=[build_sdist])
+def publish_pypi(cx):
+    cx.run(f"twine upload "
+           f"--repository-url {PYPI_INDEX_URL} "
+           f"dist/*')
+
+
+@task(pre=[update_tools, build])
+def publish(cx):
+    publish_test_pypi(cx)
 
 # Conda Forge
 

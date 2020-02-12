@@ -60,5 +60,32 @@ Then to quickly re-render and put you back in the same location
 afterwards:
 
 #+begin_src bash
-(cd -; inv test-render)
+deactivate; (cd -; inv test-render)
+#+end_src
+
+Typically, you need to:
+
+- initialize version control
+- compile dependencies for env
+- make an env
+- test
+- build
+- release
+- publish
+
+#+begin_src bash
+inv vcs-init && inv deps-pin && inv env
+#+end_src
+
+Then activate the env and do the rest.
+
+#+begin_src bash
+inv test-all
+inv docs-serve
+#+end_src
+
+To make a release:
+
+#+begin_src bash
+inv 
 #+end_src

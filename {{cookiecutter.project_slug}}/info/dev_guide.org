@@ -196,12 +196,25 @@ This will write files to ~metrics~.
 
 *** Releases
 
+**** COMMENT STUB Writing & Generating the Changelog
+
+# IDEA: still need to implement this
+
 **** Choosing a version number
 
-- semver :: major, minor, patch
+Versions should be "canonical" strings following the guidelines in PEP
+440.
+
+That means we support roughly:
+
+- semver-ish major, minor, and patch parts
 - release candidates
 - dev
-- post release
+- post release "patches"
+
+However, we don't prescribe explicit semantics to any of the parts as
+this is highly variable depending on the needs of a project and the
+forums by which it is published (e.g. PyPI, Github, etc.).
 
 **** Changing the version number
 
@@ -216,18 +229,18 @@ automatic way would be nice and ~bumpversion~ wasn't working for
 us). So go in and manually edit them. For reference see PEP 440 for
 valid ones.
 
-The targets are in the ~.bumpversion.cfg~ for reference, but at a high
-level:
+The target locations for changing versions are in the following files:
 
 - [ ] ~setup.py~
 - [ ] ~src/{{ cookiecutter.project_name }}/__init__.py~
 - [ ] ~sphinx/config.py~
 - [ ] ~conda/conda-forge/meta.yaml~
 
+# IDEA: would like to have this done automatically with some
+# replacement but I need a robust way to do this. Preferrably not
+# using regexs, and still with some interactive intervention and
+# confirmation of correctness
 
-
-
-
-
+**** Tagging the Commit
 
 
