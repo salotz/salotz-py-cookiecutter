@@ -1,6 +1,17 @@
 
 ## Project specific
 
+# sphinx
+
+# this is where the converted files reside which are inputs to sphinx
+sphinx/source
+
+# this is where sphinx outputs rendered HTML
+sphinx/_build
+
+# where apidoc puts sphinx files
+sphinx/_api
+
 # the directory all the virtual environments will be stored
 _venv
 
@@ -67,9 +78,6 @@ coverage.xml
 
 # Scrapy stuff:
 .scrapy
-
-# Sphinx documentation
-docs/_build/
 
 # PyBuilder
 target/

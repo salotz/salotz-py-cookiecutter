@@ -12,7 +12,8 @@ There are some optional features you can install as well using the
 
 - all :: installs all extras
 
-Check the setup.py file under 'extras_requirements' for the full listing.
+Check the setup.py file under ~extras_requirements~ for the full
+listing.
 
 You can always install from git as well for the latest:
 

@@ -194,7 +194,7 @@ def clean_cache(cx):
 def clean_docs(cx):
     """Remove all documentation build products"""
 
-    cx.run("rm -rf sphinx/_build/*")
+    docs_clean(cx)
 
 @task
 def clean_website(cx):
@@ -228,11 +228,87 @@ def clean(cx):
 
 
 ### Docs
+ORG_DOCS_SOURCES = [
+    'changelog',
+    'dev_guide',
+    'general_info',
+    'installation',
+    'introduction',
+    'news',
+    'quick_start',
+    'troubleshooting',
+    'users_guide',
+    'reference',
+]
+
+RST_DOCS_SOURCES = [
+    'glossary',
+    'tutorials/index',
+]
 
 @task
+def docs_clean(cx):
+
+    cx.run("cd sphinx && make clean")
+    cx.run("rm -rf sphinx/_build/*")
+    cx.run("rm -rf sphinx/source/*")
+    cx.run("rm -rf sphinx/api/*")
+
+@task(pre=[docs_clean,])
 def docs_build(cx):
     """Buld the documenation"""
-    cx.run("(cd sphinx; ./build.sh)")
+
+    # make sure the 'source' folder exists
+    cx.run("mkdir -p sphinx/source")
+    cx.run("mkdir -p sphinx/source/tutorials")
+
+    # copy the plain RST files over to the sources
+    for source in RST_DOCS_SOURCES:
+        cx.run(f"cp info/{source}.rst sphinx/source/{source}.rst")
+
+    # convert the org mode to rst in the source folder
+    for source in ORG_DOCS_SOURCES:
+
+        # name it the same
+        target = source
+
+        cx.run("pandoc "
+               "-f org "
+               "-t rst "
+               f"-o sphinx/source/{target}.rst "
+               f"info/{source}.org")
+
+    # convert any of the tutorials that exist with an org mode extension as well
+    for source in os.listdir('info/tutorials'):
+        source = Path(source)
+
+        # if it is org mode convert it and put it into the sources
+        if source.suffix == '.org':
+
+            source = source.stem
+            cx.run("pandoc "
+                   "-f org "
+                   "-t rst "
+                   f"-o sphinx/source/tutorials/{source}.rst "
+                   f"info/tutorials/{source}.org")
+
+        # otherwise just move it
+        else:
+
+            # quick check for other kinds of supported files
+            assert source.suffix in ['.ipynb', '.rst',]
+
+            cx.run(f"cp info/tutorials/{source} sphinx/source/tutorials/{source}")
+
+    # run the build steps for sphinx
+    with cx.cd('sphinx'):
+
+        # build the API Documentation
+        cx.run("sphinx-apidoc -f --separate --private --ext-autodoc --module-first --maxdepth 1 -o api ../src/geomm")
+
+        # then do the sphinx build process
+        cx.run("sphinx-build -b html -E -a -j 6 . ./_build/html/")
+
 
 @task(pre=[docs_build])
 def docs_serve(cx):
@@ -320,12 +396,16 @@ def tests_tox(cx):
 @task
 def lint(cx):
 
+    cx.run("mkdir -p metrics/lint")
+
     cx.run("rm -f metrics/lint/flake8.txt")
     cx.run("flake8 --output-file=metrics/lint/flake8.txt src/{{ cookiecutter.project_slug }}")
 
 @task
 def complexity(cx):
     """Analyze the complexity of the project."""
+
+    cx.run("mkdir -p metrics/code_quality")
 
     cx.run("lizard -o metrics/code_quality/lizard.csv src/{{ cookiecutter.project_slug }}")
     cx.run("lizard -o metrics/code_quality/lizard.html src/{{ cookiecutter.project_slug }}")
@@ -519,7 +599,7 @@ def build(cx):
 
 TESTING_INDEX_URL = "https://test.pypi.org/legacy/"
 
-@task(pre=[clean_dist, build])
+@task(pre=[clean_dist, build_sdist])
 def publish_test_pypi(cx, version=None):
 
     assert version is not None
@@ -536,12 +616,12 @@ def publish_test_pypi(cx, version=None):
     #        "dist/{{cookiecutter.project_name}}-{version}*")
 
 
-@task(pre=[clean_dist, update_tools, build])
+@task(pre=[clean_dist, update_tools, build_sdist])
 def publish_test(cx):
 
-    from {{cookiecutter.project_slug}} import __version__ as proj_version
+    from {{cookiecutter.project_slug}} import __version__ as version
 
-    publish_test_pypi(cx)
+    publish_test_pypi(cx, version=version)
 
 # PyPI
 

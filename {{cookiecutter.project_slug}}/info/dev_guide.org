@@ -84,7 +84,7 @@ and where they are managed:
 - Python Libraries :: These dependencies are managed in ~setup.py~ and
   in PyPI or other indices.
 - Python Applications/Deployments :: These are dependencies managed in
-  ~requirements.in~/~requirements.txt~ and used for developer
+  ~requirements.in~ and ~requirements.txt~ and used for developer
   environments and deployment environments.
 
 So for the library aspect we use abstract requirements. These should
@@ -119,7 +119,7 @@ To compile and build the docs just run:
 inv docs-build
 #+end_src
 
-Which will output them to a temporary build directory '_build/html'.
+Which will output them to a temporary build directory ~_build/html~.
 
 You can clean this build with:
 
@@ -283,6 +283,26 @@ the test indexes (if available):
 
 #+begin_src bash
 inv publish-test
+#+end_src
+
+You can test that it works by installing from the ~base~ env.
+
+Make it if you haven't:
+
+#+begin_src bash
+inv env -n base
+#+end_src
+
+Then activate it:
+
+#+begin_src bash
+source _venv/base/bin/activate
+#+end_src
+
+And install the package from the test repo with no dependencies:
+
+#+begin_src bash
+pip install --index-url https://test.pypi.org/simple/ --no-deps {{cookiecutter.project_name}}-{{cookiecutter.owner_nickname}}
 #+end_src
 
 # QUEST: should this message be the release message we want for the VCS

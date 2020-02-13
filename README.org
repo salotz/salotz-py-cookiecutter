@@ -6,10 +6,17 @@ Install the tools necessary which are specified in the
 [[file:requirements.txt][requirements.txt]] file, which is just cookiecutter and any plugins we
 might need.
 
-Then you can just make repos from the template:
+Then you can just make repos from the template either directly from
+github:
 
 #+begin_src bash
 cookiecutter https://github.com/salotz/salotz-py-cookiecutter.git
+#+end_src
+
+Or from the cloned repo:
+
+#+begin_src bash
+cookiecutter .
 #+end_src
 
 Where you will be prompted for details.
