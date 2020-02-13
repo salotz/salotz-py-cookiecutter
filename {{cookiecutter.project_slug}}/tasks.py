@@ -66,16 +66,30 @@ def conda_env(cx, name='dev'):
 
     with cx.prefix(f'eval "$(conda shell.bash hook)" && conda activate {env_dir}'):
 
-        # install the conda dependencies
-        if osp.exists(f"{env_spec_path}/env.yaml"):
+        # install the conda dependencies. choose a specification file
+        # based on these priorities of most pinned to least frozen.
+        if osp.exists(env_spec_path / "env.pinned.yaml"):
+
+            cx.run(f"conda env update "
+                   f"--prefix {env_dir} "
+                   f"--file {env_spec_path}/env.pinned.yaml")
+
+
+        elif osp.exists(env_spec_path / "env.yaml"):
+
             cx.run(f"conda env update "
                    f"--prefix {env_dir} "
                    f"--file {env_spec_path}/env.yaml")
 
+        else:
+            # don't do a conda env pin
+            pass
+
+
         # install the extra pip dependencies
         if osp.exists(f"{env_spec_path}/requirements.txt"):
             cx.run(f"{env_dir}/bin/pip install "
-                   "-r {env_spec_path}/requirements.txt")
+                   f"-r {env_spec_path}/requirements.txt")
 
         # install the package itself
         if osp.exists(f"{env_spec_path}/self.requirements.txt"):
@@ -175,19 +189,33 @@ def deps_pip_update(cx, name='dev'):
 
 ## conda: managing conda dependencies
 
-# STUB
 @task
-def deps_conda_pin(cx):
+def deps_conda_pin(cx, name='dev'):
 
-    # first create the environment via 
-    cx.run("conda list --no-pip --explicit "
-           "-n ")
-    pass
+    env_spec_path = Path('envs') / name
 
-# STUB
+    assert osp.exists(env_spec_path / 'env.yaml'), \
+        "There must be an 'env.yaml' file to compile from"
+
+    # make the environment under a mangled name so we don't screw with
+    # the other one
+    mangled_name = f"__mangled_{name}"
+    env_dir = conda_env(cx, name=mangled_name)
+
+    # pin to a 'env.pinned.yaml' file
+    cx.run(f"conda env export "
+           f"-p {env_dir} "
+           f"-f {env_spec_path}/env.pinned.yaml")
+
+
+    # then destroy the temporary mangled env
+    cx.run(f"rm -rf {env_dir}")
+
 @task
-def deps_conda_update(cx):
-    pass
+def deps_conda_update(cx, name='dev'):
+
+    # for now we just rewrite it
+    deps_conda_pin(cx, name=name)
 
 # altogether
 @task
@@ -195,17 +223,41 @@ def deps_pin(cx, name='dev'):
 
     deps_pip_pin(cx, name=name)
 
+    deps_conda_pin(cx, name=name)
+
     cx.run(f"git add -A && git commit -m 'pinned dependencies for the env: {name}'")
 
+# altogether
+@task
+def deps_pin(cx, name='dev'):
+
+    deps_pip_pin(cx, name=name)
     deps_conda_pin(cx, name=name)
+
+    # SNIPPET, IDEA: automatic git commits could be supported but
+    # pairs poorly with the rest being automatic, would need better
+    # semantics about splitting them up so they are analyzable, and no
+    # such tool is planned so the consistency of commit messages is
+    # unwarranted as of yet
+    #
+    # cx.run(f"git add -A && git commit -m 'pinned dependencies for the env: {name}'")
+
+
 
 @task
 def deps_pin_update(cx, name='dev'):
+
     deps_pip_update(cx, name=name)
 
-    # SNIPPET
-    # deps_conda_update(cx, name=name)
+    deps_conda_update(cx, name=name)
 
+    # SNIPPET, IDEA: automatic git commits could be supported but
+    # pairs poorly with the rest being automatic, would need better
+    # semantics about splitting them up so they are analyzable, and no
+    # such tool is planned so the consistency of commit messages is
+    # unwarranted as of yet
+    #
+    # cx.run(f"git add -A && git commit -m 'pinned dependencies for the env: {name}'")
 
 
 ### Cleaning
@@ -336,7 +388,7 @@ def docs_build(cx):
     with cx.cd('sphinx'):
 
         # build the API Documentation
-        cx.run("sphinx-apidoc -f --separate --private --ext-autodoc --module-first --maxdepth 1 -o api ../src/geomm")
+        cx.run("sphinx-apidoc -f --separate --private --ext-autodoc --module-first --maxdepth 1 -o api ../src/{{cookiecutter.project_slug}}")
 
         # then do the sphinx build process
         cx.run("sphinx-build -b html -E -a -j 6 . ./_build/html/")
