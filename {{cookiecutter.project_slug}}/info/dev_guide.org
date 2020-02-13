@@ -275,7 +275,42 @@ commit from the actual changes to the code:
 - [ ] change the version numbers
 - [ ] build to test it out ~inv build~
 
-However, when you change the version number put a 'rc0' at the end of
+To test a build go ahead and run:
+
+#+begin_src bash
+inv build
+#+end_src
+
+# TODO: add a test builds target
+
+And then try to install it from an empty environment:
+
+#+begin_src bash
+inv env -n test_install
+#+end_src
+
+Activate the environment e.g.:
+
+#+begin_src bash
+source _venv/test_install/bin/activate
+#+end_src
+
+or
+
+#+begin_src bash
+conda activate _conda_envs/test_install
+#+end_src
+
+then run it for each build, e.g.:
+
+#+begin_src bash
+pip install dist/BUILD.tar.gz
+#+end_src
+
+They should all succeed.
+
+
+When you change the version number put a 'rc0' at the end of
 the new intended (semantic) number.
 
 Once you have built it and nothing is wrong go ahead and publish it to
@@ -285,19 +320,8 @@ the test indexes (if available):
 inv publish-test
 #+end_src
 
-You can test that it works by installing from the ~base~ env.
-
-Make it if you haven't:
-
-#+begin_src bash
-inv env -n base
-#+end_src
-
-Then activate it:
-
-#+begin_src bash
-source _venv/base/bin/activate
-#+end_src
+You can test that it works from the index using the same
+~test_install~ environment above.
 
 And install the package from the test repo with no dependencies:
 

@@ -676,6 +676,9 @@ def build(cx):
     pass
 
 
+# IDEA: add a 'test_builds' target, that opens a clean environment and
+# installs each build
+
 
 ## Publishing
 
@@ -709,7 +712,7 @@ def publish_test(cx):
 
 # PyPI
 
-PYPI_INDEX_URL = "https://pypi.org//"
+PYPI_INDEX_URL = "https://upload.pypi.org/legacy/"
 
 @task(pre=[clean_dist, build])
 def publish_pypi(cx, version=None):
