@@ -12,6 +12,5 @@
     "url" : "https://github.com/jshmo/{{cookiecutter.project_slug}}",
     "dev_url" : "https://github.com/jshmo/{{cookiecutter.project_slug}}",
     "doc_url" : "https://jshmo.github.io/{{cookiecutter.project_slug}}",
-    "sdist_url" : "https://github.com/jshmo/{{cookiecutter.project_slug}}/releases/download/",
-    "pyversion" : "3.7"
+    "sdist_url" : "https://github.com/jshmo/{{cookiecutter.project_slug}}/releases/download/"
 }

@@ -5,14 +5,14 @@ import os
 import os.path as osp
 from pathlib import Path
 
-
-PYTHON_VERSION = '{{ cookiecutter.pyversion }}'
-
 BENCHMARK_STORAGE_URL="./metrics/benchmarks"
 BENCHMARK_STORAGE_URI="\"file://{}\"".format(BENCHMARK_STORAGE_URL)
 
+ENV_METHOD = 'venv'
 
+# directories the actual environments are stored
 VENV_DIR = "_venv"
+CONDA_ENVS_DIR = "_conda_envs"
 
 SELF_REQUIREMENTS = 'self.requirements.txt'
 
@@ -26,33 +26,64 @@ def vcs_init(cx):
     initial_version = "{{cookiecutter.initial_version}}"
     tag_string = VCS_RELEASE_TAG_TEMPLATE.format(initial_version)
 
-    cx.run("git init && git add -A && git commit -m 'initial commit' && git tag -a {tag_string} -m 'initialization release'")
+    cx.run("git init && "
+           "git add -A && "
+           "git commit -m 'initial commit' && "
+           "git tag -a {tag_string} -m 'initialization release'")
 
 ### Environments
 
 def conda_env(cx, name='dev'):
 
-    env_name = f"{{ cookiecutter.project_slug }}.{name}"
+    # locally scoped since the environment is global to the
+    # anaconda installation
+    env_name = name
 
+    # where the specs of the environment are
     env_spec_path = Path("envs") / name
 
-    cx.run(f"conda create -y -n {env_name} python={PYTHON_VERSION}",
+    # using the local envs dir
+    env_dir = Path(CONDA_ENVS_DIR) / name
+
+    # figure out which python version to use, if the 'py_version.txt'
+    # file exists read it
+    py_version_path = env_spec_path / 'py_version.txt'
+    if osp.exists(py_version_path):
+        with open(py_version_path, 'r') as rf:
+            py_version = rf.read().strip()
+
+        # TODO: validate the string for python version
+
+    # otherwise use the one you are currently using
+    else:
+        py_version = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
+
+    # create the environment
+    cx.run(f"conda create -y "
+           f"--prefix {env_dir} "
+           f"python={py_version}",
         pty=True)
 
-    # install the conda dependencies
-    if osp.exists(f"{env_spec_path}/env.yaml"):
-        cx.run(f"conda env update -n {env_name} --file {env_spec_path}/env.yaml")
+    with cx.prefix(f'eval "$(conda shell.bash hook)" && conda activate {env_dir}'):
 
-    # install the extra pip dependencies
-    if osp.exists(f"{env_spec_path}/requirements.txt"):
-        cx.run(f"$ANACONDA_DIR/envs/{env_name}/bin/pip install -r {env_spec_path}/requirements.txt")
+        # install the conda dependencies
+        if osp.exists(f"{env_spec_path}/env.yaml"):
+            cx.run(f"conda env update "
+                   f"--prefix {env_dir} "
+                   f"--file {env_spec_path}/env.yaml")
 
-    # install the package itself
-    if osp.exists(f"{env_spec_path}/self.requirements.txt"):
-        cx.run(f"$ANACONDA_DIR/envs/{env_name}/bin/pip install -r {env_spec_path}/self.requirements.txt")
+        # install the extra pip dependencies
+        if osp.exists(f"{env_spec_path}/requirements.txt"):
+            cx.run(f"{env_dir}/bin/pip install "
+                   "-r {env_spec_path}/requirements.txt")
+
+        # install the package itself
+        if osp.exists(f"{env_spec_path}/self.requirements.txt"):
+            cx.run(f"{env_dir}/bin/pip install -r {env_spec_path}/self.requirements.txt")
 
     print("--------------------------------------------------------------------------------")
-    print(f"run: conda activate {env_name}")
+    print(f"run: conda activate {env_dir}")
+
 
 def venv_env(cx, name='dev'):
 
@@ -91,14 +122,12 @@ def venv_env(cx, name='dev'):
 @task
 def env(cx, name='dev'):
 
-    env_name = f"{{ cookiecutter.project_slug }}.{name}"
-
     # choose your method:
+    if ENV_METHOD == 'conda':
+        conda_env(cx, name=name)
 
-    # SNIPPET
-    # conda_env(cx, name=name)
-
-    venv_env(cx, name=name)
+    elif ENV_METHOD == 'venv':
+        venv_env(cx, name=name)
 
 ### Repo
 
@@ -149,6 +178,10 @@ def deps_pip_update(cx, name='dev'):
 # STUB
 @task
 def deps_conda_pin(cx):
+
+    # first create the environment via 
+    cx.run("conda list --no-pip --explicit "
+           "-n ")
     pass
 
 # STUB
@@ -164,8 +197,7 @@ def deps_pin(cx, name='dev'):
 
     cx.run(f"git add -A && git commit -m 'pinned dependencies for the env: {name}'")
 
-    # SNIPPET
-    # deps_conda_pin(cx, name=name)
+    deps_conda_pin(cx, name=name)
 
 @task
 def deps_pin_update(cx, name='dev'):
