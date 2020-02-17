@@ -222,16 +222,6 @@ def deps_conda_update(cx, name='dev'):
 def deps_pin(cx, name='dev'):
 
     deps_pip_pin(cx, name=name)
-
-    deps_conda_pin(cx, name=name)
-
-    cx.run(f"git add -A && git commit -m 'pinned dependencies for the env: {name}'")
-
-# altogether
-@task
-def deps_pin(cx, name='dev'):
-
-    deps_pip_pin(cx, name=name)
     deps_conda_pin(cx, name=name)
 
     # SNIPPET, IDEA: automatic git commits could be supported but
