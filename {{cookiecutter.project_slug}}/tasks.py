@@ -15,8 +15,11 @@ VENV_DIR = "_venv"
 CONDA_ENVS_DIR = "_conda_envs"
 
 SELF_REQUIREMENTS = 'self.requirements.txt'
+PYTHON_VERSION_FILE = 'py_version.txt'
 
 VCS_RELEASE_TAG_TEMPLATE = "v{}"
+
+DEFAULT_ENV = 'dev'
 
 ### Version Control
 
@@ -33,7 +36,7 @@ def vcs_init(cx):
 
 ### Environments
 
-def conda_env(cx, name='dev'):
+def conda_env(cx, name=DEFAULT_ENV):
 
     # locally scoped since the environment is global to the
     # anaconda installation
@@ -47,7 +50,7 @@ def conda_env(cx, name='dev'):
 
     # figure out which python version to use, if the 'py_version.txt'
     # file exists read it
-    py_version_path = env_spec_path / 'py_version.txt'
+    py_version_path = env_spec_path / PYTHON_VERSION_FILE
     if osp.exists(py_version_path):
         with open(py_version_path, 'r') as rf:
             py_version = rf.read().strip()
@@ -99,7 +102,7 @@ def conda_env(cx, name='dev'):
     print(f"run: conda activate {env_dir}")
 
 
-def venv_env(cx, name='dev'):
+def venv_env(cx, name=DEFAULT_ENV):
 
     venv_dir_path = Path(VENV_DIR)
     venv_path = venv_dir_path / name
@@ -134,7 +137,7 @@ def venv_env(cx, name='dev'):
     print(f"source {venv_path}/bin/activate")
 
 @task
-def env(cx, name='dev'):
+def env(cx, name=DEFAULT_ENV):
 
     # choose your method:
     if ENV_METHOD == 'conda':
@@ -160,10 +163,8 @@ def repo_test(cx):
 
 ## pip: things that can be controlled by pip
 
-# TODO: modify so that it is managing the envs in the 'envs' dir
-
 @task
-def deps_pip_pin(cx, name='dev'):
+def deps_pip_pin(cx, name=DEFAULT_ENV):
 
     path = Path("envs") / name
 
@@ -178,7 +179,7 @@ def deps_pip_pin(cx, name='dev'):
     #        f"requirements.in")
 
 @task
-def deps_pip_update(cx, name='dev'):
+def deps_pip_update(cx, name=DEFAULT_ENV):
 
     path = Path("envs") / name
 
@@ -190,7 +191,7 @@ def deps_pip_update(cx, name='dev'):
 ## conda: managing conda dependencies
 
 @task
-def deps_conda_pin(cx, name='dev'):
+def deps_conda_pin(cx, name=DEFAULT_ENV):
 
     env_spec_path = Path('envs') / name
 
@@ -212,24 +213,14 @@ def deps_conda_pin(cx, name='dev'):
     cx.run(f"rm -rf {env_dir}")
 
 @task
-def deps_conda_update(cx, name='dev'):
+def deps_conda_update(cx, name=DEFAULT_ENV):
 
     # for now we just rewrite it
     deps_conda_pin(cx, name=name)
 
 # altogether
 @task
-def deps_pin(cx, name='dev'):
-
-    deps_pip_pin(cx, name=name)
-
-    deps_conda_pin(cx, name=name)
-
-    cx.run(f"git add -A && git commit -m 'pinned dependencies for the env: {name}'")
-
-# altogether
-@task
-def deps_pin(cx, name='dev'):
+def deps_pin(cx, name=DEFAULT_ENV):
 
     deps_pip_pin(cx, name=name)
     deps_conda_pin(cx, name=name)
@@ -245,7 +236,7 @@ def deps_pin(cx, name='dev'):
 
 
 @task
-def deps_pin_update(cx, name='dev'):
+def deps_pin_update(cx, name=DEFAULT_ENV):
 
     deps_pip_update(cx, name=name)
 
@@ -432,11 +423,11 @@ def tests_benchmarks(cx):
     cx.run("(cd tests/tests/test_benchmarks && pytest -m 'not interactive')")
 
 @task
-def tests_integration(cx, node='dev'):
+def tests_integration(cx, node=DEFAULT_ENV):
     cx.run(f"(cd tests/tests/test_integration && pytest -m 'not interactive' -m 'node_{node}')")
 
 @task
-def tests_unit(cx, node='dev'):
+def tests_unit(cx, node=DEFAULT_ENV):
     cx.run(f"(cd tests/tests/test_unit && pytest -m 'not interactive' -m 'node_{node}')")
 
 @task
@@ -446,7 +437,7 @@ def tests_interactive(cx):
     cx.run("pytest -m 'interactive'")
 
 @task()
-def tests_all(cx, node='dev'):
+def tests_all(cx, node=DEFAULT_ENV):
     """Run all the automated tests. No benchmarks.
 
     There are different kinds of nodes that we can run on that
