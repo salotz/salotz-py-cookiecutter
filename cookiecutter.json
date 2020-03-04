@@ -9,8 +9,8 @@
     "owner_name" : "Joe Shmo",
     "owner_email" : "joe@shmo.com",
     "owner_nickname" : "jshmo",
-    "url" : "https://github.com/jshmo/{{cookiecutter.project_slug}}",
-    "dev_url" : "https://github.com/jshmo/{{cookiecutter.project_slug}}",
-    "doc_url" : "https://jshmo.github.io/{{cookiecutter.project_slug}}",
-    "sdist_url" : "https://github.com/jshmo/{{cookiecutter.project_slug}}/releases/download/"
+    "url" : "https://github.com/{{cookiecutter.owner_nickname}}/{{cookiecutter.project_slug}}",
+    "dev_url" : "https://github.com/{{cookiecutter.owner_nickname}}/{{cookiecutter.project_slug}}",
+    "doc_url" : "https://{{cookiecutter.owner_nickname}}.github.io/{{cookiecutter.project_slug}}",
+    "sdist_url" : "https://github.com/{{cookiecutter.owner_nickname}}/{{cookiecutter.project_slug}}/releases/download/"
 }

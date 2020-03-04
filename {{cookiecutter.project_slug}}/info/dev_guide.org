@@ -391,3 +391,14 @@ inv env
 
 Then you can activate it with the instructions printed to the screen.
 
+*** Website Admin
+
+We use Github Pages by default since it is pretty easy. Because we
+don't want to clutter up the master branch with website build
+artifacts we use the ~gh-pages~ branch approach.
+
+If you just run the ~inv website-deploy~ target this will idempotently
+take care of setting this up for you.
+
+However, you will need to create it and push it before you can set
+this in the github settings for the page.
