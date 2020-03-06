@@ -32,7 +32,7 @@ def vcs_init(cx):
     cx.run("git init && "
            "git add -A && "
            "git commit -m 'initial commit' && "
-           "git tag -a {tag_string} -m 'initialization release'")
+           f"git tag -a {tag_string} -m 'initialization release'")
 
 ### Environments
 
