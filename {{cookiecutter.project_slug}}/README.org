@@ -16,4 +16,4 @@ in HTML rendered with Sphinx.
 
 ** Developing
 
-See the [[file:sphinx/source/dev_guide.org][Developers Guide]] for developing.
+See the [[file:info/dev_guide.org][Developers Guide]] for developing.
