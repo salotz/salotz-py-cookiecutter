@@ -1,38 +1,38 @@
 #!/bin/bash
 
-# TODO: turn this into an individual target in the tasks
-# SNIPPET: deploy via rsync
-# rsync -rav ./_build/html/ salotz@volta.bch.msu.edu:/volume1/web/wepy/
-
 # TODO: make this more general
 # TODO: move to python code
 
-# make sure we have the remote and have fetched the branch
-git remote add github git@github.com:ADicksonLab/wepy.git || echo "github remote already present"
-git checkout --track github/gh-pages
+# delete and create every time
+git branch -D gh-pages
+git branch gh-pages master
 
-git checkout gh-pages || { echo "aborting deploy"; exit 1; }
+# make sure we have the remote and have fetched the branch
+git remote add github {{cookiecutter.dev_url}} || echo "github remote already present"
+# git checkout --track github/gh-pages
+
+git checkout gh-pages
+git push --force github gh-pages || { echo "aborting deploy"; exit 1; }
 
 # NOTE: we don't use git pull because we are force pushing always
 # git pull
 
 # merge the new changes from master
-git merge master
+git merge -s recursive -Xtheirs master -m "Automated Merge From Master"
 
-# then remove the modules so we can actually build the docs without gh
-# pages complaining
-rm ../.gitmodules
-rm -rf ../wepy-tests
+# copy over the build products without adding all the other build
+# product junk in the repo
 
-git add ../.gitmodules
-git add ../wepy-tests
+cd ..
 
-# copy over the build products
-cp -rf ./_build/html/* ../
-rm -rf ./_build/html/*
+# so add the html build
+git add sphinx/_build/html/* --force
 
-# add the files in the docs folder
-git add ../* --force
+# then clean out everything including the ignored files
+git clean -x -f -e sphinx/_build/html
+
+# then move the html files in git
+git mv -f sphinx/_build/html/* ./
 
 # commit
 git commit -m "Automated commit from deploy.sh"
@@ -42,4 +42,3 @@ git push --force github gh-pages
 
 # go back to the branch you were on
 git checkout -
-
