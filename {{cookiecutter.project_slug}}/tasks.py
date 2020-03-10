@@ -146,6 +146,34 @@ def env(cx, name=DEFAULT_ENV):
     elif ENV_METHOD == 'venv':
         venv_env(cx, name=name)
 
+@task
+def env_conda_ls(cx):
+    print('\n'.join(os.listdir(CONDA_ENVS_DIR)))
+
+@task
+def env_venv_ls(cx):
+
+    print('\n'.join(os.listdir(VENV_DIR)))
+
+@task
+def env_specs(cx):
+
+    print('\n'.join(os.listdir(ENV_SPEC_DIR)))
+
+@task
+def env_ls(cx):
+
+    # choose your method:
+    if ENV_METHOD == 'conda':
+        env_conda_ls(cx)
+
+    elif ENV_METHOD == 'venv':
+        env_venv_ls(cx)
+
+@task
+def envs_clean(cx):
+    clean_envs(cx)
+
 ### Repo
 
 @task(pre=[env,])
@@ -262,6 +290,10 @@ def deps_pin_update(cx, name=DEFAULT_ENV):
 
 
 ### Cleaning
+
+@task
+def clean_envs(cx):
+    cx.run(f"rm -rf {VENV_DIR}")
 
 @task
 def clean_dist(cx):
