@@ -118,6 +118,9 @@ def venv_env(cx, name=DEFAULT_ENV):
     # then install the things we need
     with cx.prefix(f"source {venv_path}/bin/activate"):
 
+        # update pip
+        cx.run("pip install --upgrade pip")
+
         if osp.exists(f"{env_spec_path}/{SELF_REQUIREMENTS}"):
             cx.run(f"pip install -r {env_spec_path}/requirements.txt")
 
