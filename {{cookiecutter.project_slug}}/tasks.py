@@ -249,17 +249,23 @@ def deps_conda_pin(cx,
     cx.run(f"rm -rf {env_dir}")
 
 @task
-def deps_conda_update(cx, name=DEFAULT_ENV):
+def deps_conda_update(cx,
+                      name=DEFAULT_ENV,
+                      optional=False):
 
     # for now we just rewrite it
-    deps_conda_pin(cx, name=name)
+    deps_conda_pin(cx,
+                   name=name,
+                   optional=optional)
 
 # altogether
 @task
 def deps_pin(cx, name=DEFAULT_ENV):
 
     deps_pip_pin(cx, name=name)
-    deps_conda_pin(cx, name=name)
+    deps_conda_pin(cx,
+                   name=name,
+                   optional=True)
 
     # SNIPPET, IDEA: automatic git commits could be supported but
     # pairs poorly with the rest being automatic, would need better
