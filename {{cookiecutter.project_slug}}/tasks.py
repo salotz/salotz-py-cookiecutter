@@ -191,12 +191,20 @@ def deps_pip_update(cx, name=DEFAULT_ENV):
 ## conda: managing conda dependencies
 
 @task
-def deps_conda_pin(cx, name=DEFAULT_ENV):
+def deps_conda_pin(cx,
+                   name=DEFAULT_ENV,
+                   optional=False):
 
     env_spec_path = Path('envs') / name
 
-    assert osp.exists(env_spec_path / 'env.yaml'), \
-        "There must be an 'env.yaml' file to compile from"
+    if not optional:
+        assert osp.exists(env_spec_path / 'env.yaml'), \
+            "There must be an 'env.yaml' file to compile from"
+
+    else:
+        if not osp.exists(env_spec_path / 'env.yaml'):
+            return None
+
 
     # make the environment under a mangled name so we don't screw with
     # the other one
@@ -240,7 +248,9 @@ def deps_pin_update(cx, name=DEFAULT_ENV):
 
     deps_pip_update(cx, name=name)
 
-    deps_conda_update(cx, name=name)
+    deps_conda_update(cx,
+                      name=name,
+                      optional=True)
 
     # SNIPPET, IDEA: automatic git commits could be supported but
     # pairs poorly with the rest being automatic, would need better
