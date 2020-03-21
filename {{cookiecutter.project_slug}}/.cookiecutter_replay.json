@@ -1,0 +1,16 @@
+{
+    "_extensions" : ["jinja2_time.TimeExtension"],
+    "project_name" : "{{cookiecutter.project_name}}",
+    "project_slug" : "{{cookiecutter.project_slug}}",
+    "project_description" : "{{cookiecutter.project_description}}",
+    "initial_version" : "{{cookiecutter.initial_version}}",
+    "copyright" : "{{cookiecutter.copyright}}",
+    "license" : "{{cookiecutter.license}}",
+    "owner_name" : "{{cookiecutter.owner_name}}",
+    "owner_email" : "{{cookiecutter.owner_email}}",
+    "owner_nickname" : "{{cookiecutter.owner_nickname}}",
+    "url" : "{{cookiecutter.url}}",
+    "dev_url" : "{{cookiecutter.dev_url}}",
+    "doc_url" : "{{cookiecutter.doc_url}}",
+    "sdist_url" : "{{cookiecutter.sdist_url}}"
+}

@@ -26,35 +26,82 @@ file.
 pip install -r tools.requirements.txt
 #+end_src
 
+*** Configuring
+
+We typically manage configuration values in the ~tasks/config.py~ and
+~tasks/sysconfig.py~ files as opposed to global system environment
+variables.
+
+See the ~jubeo~ documentation on how to use these configuration files.
+
+For this python project template we do need to set some values before
+all of the features will work. We also avoid setting these in shell
+configuration variables and as of now it is just up to the user to
+customize these. To the ~tasks/config.py~ file add the following:
+
+#+begin_src python
+PROJECT_SLUG = "{{cookiecutter.project_slug}}"
+VERSION="{{cookiecutter.initial_version}}"
+#+end_src
+
+Just make sure to update the version string here when you do releases
+(included in the checklist for releases).
+
 *** Virtual Environments
 
-This is for managing environments which are just for the purpose of
-developing this project, and not necessarily just for running it (as a
-user). See [[*Managing Dependencies][Managing Dependencies]] for details on managing dependencies
-of the installable project.
+There are helpers for pinning and (re)generating python virtual
+environments which are helpful in developing and testing this project,
+and not necessarily just for running it as a user. See [[*Managing Dependencies][Managing
+Dependencies]] for details on managing dependencies of the installable
+project.
 
-We also require a few shell environmental variables which are exported
-in the ~env.bash~ file. Go ahead and source this before doing anything
-else:
+If an environment has been already been written and compiled you need
+only create it locally and then activate it.
 
-#+begin_src bash
-source env.bash
-#+end_src
-
-To create an env called ~{{ cookiecutter.project_name }}.dev~ just run the ~env~ target from
-~invoke~:
+To create an env called ~dev~ just run the ~env~ (~env.make~) target
+from ~invoke~:
 
 #+begin_src bash
-inv env
+inv env -n dev
 #+end_src
+
+If it fails double check that all the dependencies have been compiled.
+
+If it still fails, likely the environment is meant to be used for
+simultaneous development of multiple projects.  You can check which
+installable source repos are expected in which locations by looking at
+the ~self.requirements.txt~ file.  If there are simultaneous dev
+requirements make sure these source repos can be found at those
+locations.
 
 Then follow the activation instructions that are printed as different
 projects might use different backends.
 
-If you ever have problems with an environment just rerun this to get a
-clean one. A practice we encourage to do frequently so that developers
-don't diverge in their envs with local modifications. So while you can
-make your env, try to use this one unless you have problems.
+For pure python projects the default ~venv~ tool should be used, but
+~conda~ is also an option.
+
+For ~venv~ envs they will be stored in a directory called ~_venvs~ and
+for conda ~_conda_envs~ (this is customizable however). Simply:
+
+#+begin_src bash
+source _venvs/dev/bin/activate_
+#+end_src
+
+or
+
+#+begin_src bash
+conda activate _conda_envs/dev
+#+end_src
+
+In any case the environments are not stored with other user-level
+environments, what we call /ambient/ environments, and are instead
+stored in the project directory.
+
+If you ever have problems with an environment just rerun the
+~env.make~ target to get a clean one. A practice we encourage to do
+frequently so that developers don't diverge in their envs with local
+modifications. So while you can make your env, try to use this one
+unless you have problems.
 
 We maintain a number of preconfigured environments in the ~envs~
 directory which are used for different purposes. Calling ~inv env -n
@@ -62,21 +109,41 @@ dev~ is the same as ~inv dev~ since it is the default, but any other
 environment can be created by passing the matching name. For instance
 there is an environment that mimics the user's installation
 environment so that we can test experiences upon install, to make sure
-we haven't accidentally depended on something in the dev env. For
-instance:
+we haven't accidentally depended on something in the dev env:
 
 #+begin_src bash
-inv env -n base
+inv env -n test_install
 #+end_src
-
-If you want to make another environment it is straightforward to copy
-the examples in the ~envs~ dir.
-
 
 ** Maintenance Tasks
 
 *** Managing Dependencies
 
+**** Quick Reference
+
+To initially pin an environment or when you add requirements run this
+target:
+
+#+begin_src bash
+inv env.deps-pin -n dev
+#+end_src
+
+To update it (should be accompanied by a reason why):
+
+#+begin_src bash
+inv env.deps-pin-update -n dev
+#+end_src
+
+The best practice here is to make initial pinning and updating a
+single commit so that it can easily be rolled back or patched e.g.:
+
+#+begin_src bash
+git add envs/*
+git commit -m "Updates dev environment"
+#+end_src
+
+
+**** Explanation
 
 Reminder that there are two separate goals of managing dependencies
 and where they are managed:
@@ -87,27 +154,155 @@ and where they are managed:
   ~requirements.in~ and ~requirements.txt~ and used for developer
   environments and deployment environments.
 
-So for the library aspect we use abstract requirements. These should
-essentially be the same as ~requirements.in~.
+In this template project there are a number of different places
+dependencies are managed according to both of these purposes. As far
+as the python library specs are concerned it is simpler and well
+documented elsewhere. In this template we introduce a few other
+mechanisms for managing development environments. They are as follows
+with the specific purpose of them:
 
-For the deployment side of things we use ~requirements.txt~. Don't
-manually edit this. We use ~pip-tools~ to "compile" dependencies for
-this.
+- ~setup.py~ :: specifying high level requirements for installation of
+  a released version from an index by a user or system integrator.
+- ~tools.requirements.txt~ :: A bare minimum high-level listing of
+  dependencies necessary to bootstrap the creation of development
+  environments from the project tooling itself. You are free to
+  install these in any ambient environment you see fit. We suggest
+  using something like ~pyenv-virtualenv~.
+- ~envs/env_name~ dirs :: a directory with a set of files that are used
+  to reproduce development environments the full structure will be
+  discussed separately. There can be any number of these but they
+  shouldn't start with a double-underscore '__' which is used for
+  temporary utility environments.
+- ~requirements.in~ :: An optional high-level specification of install
+  dependencies readable from other projects for simultaneous
+  development. Should be the same as ~setup.py~ install dependencies.
 
-# TODO: figure out high level and pinned conda version files
 
-To initially pin an environment or when you add requirements run this
-target:
+The biggest concern for developers is writing env specs in the ~envs~
+dir. These add a few features a simple
+~requirements.in/requirements.txt~ file can't solve alone. Here is the
+full listing of possible files that can be authored by the developer
+in this directory:
 
-#+begin_src bash
-inv deps-pin
+- ~requirements.in~ :: (required) abstract specification of packages 
+- ~self.requirements.txt~ :: (required) how to install packages actively
+  being worked on
+- ~dev.requirements.list~ :: A list of paths to other
+  ~requirements.in~ files that will be included in dependency
+  compilation with this env.
+- ~pyversion.txt~ :: the python version specified (if supported)
+
+This also supports the use of ~conda~ for managing environments,
+although this isn't recommended for python packages which are not
+intended to be distributed via ~conda~. This is however, useful for
+projects like the ~analytics-cookiecutter~ project which won't
+actually be distributed to others as general purpose. For this you
+need only add another file for the abstract conda dependencies:
+
+- ~env.yaml~ (required for conda managed envs) an abstract
+  specification for dependencies. Compiled to ~env.pinned.yaml~
+
+All the other files are still valid for conda environments still.
+
+
+***** requirements.in
+
+The basic part of this spec is the ~requirements.in~ and
+~self.requirements.txt~ files. 
+
+The ~requirements.in~ file is as described in the ~pip-tools~
+documentation (i.e. ~pip-compile requirements.in~).
+
+Running ~inv env.deps-pin~ will compile this file to a
+~requirements.txt~ file, which can then be used to create an
+environment via ~inv env~ (i.e. ~pip install -r requirements.txt~).
+
+It should look something like this:
+
+#+begin_src pyreq
+  requests
+  networkx >= 2
 #+end_src
 
-To update it (should be accompanied by a reason why):
+There should be no entries like ~-e .~ for installing the package or
+any local file paths. This should be portable between machines and
+developers.
 
-#+begin_src bash
-inv deps-pin-update
+***** self.requirements.txt
+The ~self.requirements.txt~ file instead is where these kinds of
+specifications should be.
+
+At its simplest it may look like this:
+
+#+begin_src pyreq
+  -e .
 #+end_src
+
+Which means just to install the package of this current repo.
+
+However, it is often that you are working on multiple separate
+projects at once in different version control repos and want to
+develop simultaneously without either releasing them every time you
+want to make changes or even push them to a git repo. You can then
+write a ~self.requirements.txt~ file that looks like this:
+
+#+begin_src pyreq
+  -e .
+
+  -e ../other_project
+  -e $HOME/dev/util_project
+#+end_src
+
+***** dev.requirements.list
+
+During simultaneous development however, the dependencies of these
+other repos won't be included in the compilation of the
+~requirements.txt~ file.
+
+Your options are to:
+
+1. manually transcribe their dependencies into the env's
+   ~requirements.in~ file (not recommended)
+2. write top-level ~requirements.in~ files for each project and
+   include paths to these files in the
+   ~envs/env_name/dev.requirements.list~ file.
+
+The tooling here provides support for the second one. For this you
+must write a ~list~ text file (see
+[[https://github.com/salotz/rfcs/blob/master/rfcs/salotz.016_trivial-plaintext-formats.org#a-list-file][rfc:salotz/016_trivial-plaintext-formats]] for a discussion of the
+format), where each line should be a path to a ~requirements.in~ file,
+e.g.:
+
+#+begin_src trivial-list
+  ../other_project/requirements.in
+  $HOME/dev/util_project/requirements.in
+#+end_src
+
+This will include each of these files in the dependency compilation
+step.  Note that the ~requirements.in~ can come from any location and
+is not a specification other projects /must/ support.
+
+
+***** pyversion.txt
+
+This file should only contain the text that specifies the version of
+python to use that is understood by the env method (e.g. ~conda~).
+
+E.g.:
+
+#+begin_src fundamental
+3.7.6
+#+end_src
+
+Only the ~conda~ method supports this as of now.
+
+For the ~venv~ method it is still encouraged to write this file
+though, as a warning will be generated to remind you.
+
+For managing different python versions we recommend using something
+like ~pyenv~ and we may integrate with this or manually specifiying
+interpreter paths in the future.
+
 
 *** Documentation and Website
 
@@ -116,7 +311,7 @@ inv deps-pin-update
 To compile and build the docs just run:
 
 #+begin_src bash
-inv docs-build
+inv py.docs-build
 #+end_src
 
 Which will output them to a temporary build directory ~_build/html~.
@@ -124,7 +319,7 @@ Which will output them to a temporary build directory ~_build/html~.
 You can clean this build with:
 
 #+begin_src bash
-inv clean-docs
+inv py.clean-docs
 #+end_src
 
 
@@ -133,11 +328,42 @@ browser at the ~_build/html~ folder or run a python http web server
 with this target:
 
 #+begin_src bash
-inv docs-serve
+inv py.docs-serve
 #+end_src
 
 
-**** COMMENT TODO: WIP: Building and testing the website
+**** Building and testing the website
+
+For now we only support deploying the sphinx docs as a website and on
+github pages (via the ~gh-pages~ branch, see [[*Website Admin][Website Admin]]).
+
+So to view your undeployed docs just run:
+
+#+begin_src bash
+inv py.docs-serve
+#+end_src
+
+And open the local URL.
+
+Once you are happy with the result, *you must commit all changes and
+have a clean working tree* then you can push to github pages:
+
+#+begin_src bash
+inv py.website-deploy
+#+end_src
+
+Basically this checks out the ~gh-pages~ branch merges the changes
+from ~master~ builds the docs, commits them (normally these files are
+ignored), and then pushes to github which will render them.
+
+We may also support other common use cases in the future as well like
+Gitlab pages or a web server (via rsync or scp).
+
+We also will support a more traditional static site generator workflow
+instead of relying in addition to the sphinx docs.
+
+
+***** TODO COMMENT Non-sphinx docs web page
 
 The website is still a work in progress and is located in the ~jekyll~
 folder.
@@ -165,7 +391,7 @@ inv website-deploy-local
 #+end_src
 
 
-**** COMMENT Deploying the website
+**** Deploying the website
 
 We are using github pages. To avoid having to keep the entire built
 website in the main tree we use the alternate ~gh-pages~ branch. To
@@ -233,7 +459,7 @@ forums by which it is published (e.g. PyPI, Github, etc.).
 You can check the current version number with this command:
 
 #+begin_src bash
-inv version-which
+inv py.version-which
 #+end_src
 
 Increase the version number we currently do it by hand (although an
@@ -245,8 +471,9 @@ The target locations for changing versions are in the following files:
 
 - [ ] ~setup.py~
 - [ ] ~src/{{ cookiecutter.project_name }}/__init__.py~
-- [ ] ~sphinx/config.py~
-- [ ] ~conda/conda-forge/meta.yaml~
+- [ ] ~tasks/config.py~
+- [ ] ~sphinx/conf.py~
+- [ ] ~conda/conda-forge/meta.yaml~ (optional)
 
 # IDEA: would like to have this done automatically with some
 # replacement but I need a robust way to do this. Preferrably not
@@ -278,7 +505,7 @@ commit from the actual changes to the code:
 To test a build go ahead and run:
 
 #+begin_src bash
-inv build
+inv py.build
 #+end_src
 
 # TODO: add a test builds target
@@ -317,7 +544,7 @@ Once you have built it and nothing is wrong go ahead and publish it to
 the test indexes (if available):
 
 #+begin_src bash
-inv publish-test
+inv py.publish-test
 #+end_src
 
 You can test that it works from the index using the same
@@ -342,14 +569,15 @@ should follow a fixed form like
 Then you can tag the release in the ~git~ commit history:
 
 #+begin_src bash
-inv release
+inv git.release
 #+end_src
 
 Publishing the results will vary but you can start with publishing the
 package to PyPI and the VCS hosts with the real publish target:
 
 #+begin_src bash
-inv publish
+inv git.publish
+inv py.publish
 #+end_src
 
 
@@ -363,7 +591,7 @@ project but are described for posterity and completeness.
 First we need to initialize the version control system (~git~):
 
 #+begin_src bash
-inv vcs-init
+inv git.init
 #+end_src
 
 If you want to go ahead and add the remote repositories for this
@@ -377,8 +605,10 @@ Then add any extra dependencies you want to the development
 environment [[file:../envs/dev/requirements.in][requirements.in]] file and then compile and pin them:
 
 #+begin_src bash
-inv deps-pin
+inv env.deps-pin -n dev env.deps-pin -n test_install
 #+end_src
+
+Then commit this.
 
 *** Creating Environments
 
@@ -389,6 +619,8 @@ builin ~venv~ package, but this is customizable.
 inv env
 #+end_src
 
+Commit the changes.
+
 Then you can activate it with the instructions printed to the screen.
 
 *** Website Admin
@@ -397,7 +629,7 @@ We use Github Pages by default since it is pretty easy. Because we
 don't want to clutter up the master branch with website build
 artifacts we use the ~gh-pages~ branch approach.
 
-If you just run the ~inv website-deploy~ target this will idempotently
+If you just run the ~inv py.website-deploy~ target this will idempotently
 take care of setting this up for you.
 
 However, you will need to create it and push it before you can set
