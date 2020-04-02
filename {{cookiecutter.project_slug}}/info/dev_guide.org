@@ -1,5 +1,38 @@
 * Development Guide
 
+
+** Overview
+
+In this project we use a bunch of extra tools that simplify the
+drudgery of manual maintenance tasks so we can get more coding
+done. Its also probably not how your used to.
+
+This "middleware" includes:
+
+- [[https://www.pyinvoke.org/][invoke]] :: for creating the runnable endpoints or targets.
+- [[https://github.com/salotz/jubeo.git][jubeo]] :: for importing and updating a standard set of project
+  independent invoke targets and endpoints.
+
+~invoke~ is common but ~jubeo~ is a creation of my own and may still
+have some rough edges.
+
+Furthermore, this project is made from a [[https://github.com/salotz/salotz-py-cookiecutter.git][cookiecutter template]] to
+bootstrap it. You may find some odd stubs around and that is why. Feel
+free to get rid of them. If you ever want them back you can
+transcribe from the source.
+
+Ideally you won't have to do much outside of running the ~invoke~
+targets (i.e. any command that starts with ~inv~).
+
+To see all of the commands run:
+
+#+begin_src bash
+inv -l
+#+end_src
+
+You should read and understand the ~jubeo~ documentation so that you
+know how to add your own project-specific targets via ~invoke~.
+
 ** Getting Set Up
 
 *** Obtaining the source code
@@ -13,18 +46,30 @@ cd {{ cookiecutter.project_name }}
 
 *** Tooling
 
-To make things easier for developers we provide a set automation
-scripts implemented in ~invoke~ (similar to a makefile if you are
-familiar with that).
+The project comes configured for use with ~jubeo~ (see the ~.jubeo~
+directory) but without the tasks imported.
 
-So you will want to install invoke somehow to use this tooling. So
-make sure you are in a suitable python environment (i.e. not the
-systems python) and install the tools in the ~tools.requirements.txt~
-file.
+To get started you will need to install ~jubeo~ and then run this from
+the project directory:
 
 #+begin_src bash
-pip install -r tools.requirements.txt
+jubeo init .
 #+end_src
+
+This will download the appropriate ~invoke~ tasks organized into a
+special structure along with the necessary dependency specs to use
+them.
+
+To be able to run the tasks you should install these dependencies:
+
+#+begin_src bash
+pip install -r .jubeo/requirements.in
+#+end_src
+
+If you add to the libraries needed (through plugins discussed later)
+you will need to edit the ~.jubeo/requirements.txt~ file and recompile
+the ~.jubeo/requirements.in~ file by either manually running
+~pip-compile~ or using the ~inv core.pin-tool-deps~ target.
 
 *** Configuring
 
@@ -114,6 +159,7 @@ we haven't accidentally depended on something in the dev env:
 #+begin_src bash
 inv env -n test_install
 #+end_src
+
 
 ** Maintenance Tasks
 
@@ -303,7 +349,6 @@ For managing different python versions we recommend using something
 like ~pyenv~ and we may integrate with this or manually specifiying
 interpreter paths in the future.
 
-
 *** Documentation and Website
 
 **** Editing and Building Docs
@@ -407,7 +452,6 @@ The invoke target is:
 inv website-deploy
 #+end_src
 
-
 *** Testing
 
 *** Code Quality Metrics
@@ -470,7 +514,7 @@ valid ones.
 The target locations for changing versions are in the following files:
 
 - [ ] ~setup.py~
-- [ ] ~src/{{ cookiecutter.project_name }}/__init__.py~
+- [ ] ~src/{{ cookiecutter.project_slug }}/__init__.py~
 - [ ] ~tasks/config.py~
 - [ ] ~sphinx/conf.py~
 - [ ] ~conda/conda-forge/meta.yaml~ (optional)
@@ -581,6 +625,31 @@ inv py.publish
 #+end_src
 
 
+** COMMENT Misc. Tasks
+
+*** COMMENT Updating from upstream cookiecutter
+
+# STUB: DOESN'T work although I want something like this to work
+
+While ~jubeo~ handles updating tooling targets from predefined
+upstream repos it doesn't cover the many other kinds of assets in a
+project.
+
+Lots of these don't really need to change (unless you intentionally do
+for whatever reason) and we have tried to have sane initial
+configuration throughout and isolate the areas that you might actually
+want to write content to. We don't provide an extensive documentation
+of these points but you may discover you do want to "pull" something
+from the upstream cookiecutter.
+
+The way to do this is to use the /ad hoc/ [[https://github.com/mattrobenolt/jinja2-cli][jinja2-cli]] tool, which is
+not installed as part of the tooling.
+
+Just choose the target file from the cookiecutter and run this to fill
+in the template:
+
+
+
 ** Initializing this repository
 
 These are tasks that should only be done once at the inception of the
@@ -619,8 +688,6 @@ builin ~venv~ package, but this is customizable.
 inv env
 #+end_src
 
-Commit the changes.
-
 Then you can activate it with the instructions printed to the screen.
 
 *** Website Admin
@@ -634,3 +701,5 @@ take care of setting this up for you.
 
 However, you will need to create it and push it before you can set
 this in the github settings for the page.
+
+
