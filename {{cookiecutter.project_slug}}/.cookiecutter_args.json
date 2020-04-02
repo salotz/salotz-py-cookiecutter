@@ -1,0 +1,16 @@
+{
+    "_extensions" : ["jinja2_time.TimeExtension"],
+    "cookiecutter.project_name" : "{{cookiecutter.project_name}}",
+    "cookiecutter.project_slug" : "{{cookiecutter.project_slug}}",
+    "cookiecutter.project_description" : "{{cookiecutter.project_description}}",
+    "cookiecutter.initial_version" : "{{cookiecutter.initial_version}}",
+    "cookiecutter.copyright" : "{{cookiecutter.copyright}}",
+    "cookiecutter.license" : "{{cookiecutter.license}}",
+    "cookiecutter.owner_name" : "{{cookiecutter.owner_name}}",
+    "cookiecutter.owner_email" : "{{cookiecutter.owner_email}}",
+    "cookiecutter.owner_nickname" : "{{cookiecutter.owner_nickname}}",
+    "cookiecutter.url" : "{{cookiecutter.url}}",
+    "cookiecutter.dev_url" : "{{cookiecutter.dev_url}}",
+    "cookiecutter.doc_url" : "{{cookiecutter.doc_url}}",
+    "cookiecutter.sdist_url" : "{{cookiecutter.sdist_url}}"
+}
