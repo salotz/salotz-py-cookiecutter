@@ -17,6 +17,8 @@ remote-pdb
 
 # utilities
 # bumpversion
+versioneer
+
 
 # task running
 invoke
@@ -29,12 +31,16 @@ sphinxcontrib-napoleon
 nbsphinx
 notebook
 
+# website
+nikola[all]
+ghp-import
+
 # testing
 pytest
 pytest-runner
 argcomplete
 flake8
-tox
+nox
 coverage
 
 # code quality metrics
