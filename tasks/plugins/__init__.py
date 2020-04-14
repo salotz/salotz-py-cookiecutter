@@ -2,6 +2,10 @@
 
 # import plugins:
 
+from . import wumpus
+
 # specify which plugins to install, the custom one is included by
 # default to get users going
-PLUGIN_MODULES = []
+PLUGIN_MODULES = [
+    wumpus,
+]
