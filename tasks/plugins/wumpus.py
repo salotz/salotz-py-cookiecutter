@@ -41,3 +41,6 @@ def test(cx):
 
         cx.run("inv py.quality",
                warn=True)
+
+        cx.run("pwd")
+        cx.run("inv py.docs-serve")

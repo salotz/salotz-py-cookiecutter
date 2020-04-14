@@ -1,1 +1,3 @@
 * Examples
+
+- [[./library/README.org][Using Wumpus as a library]]
