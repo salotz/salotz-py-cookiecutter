@@ -41,6 +41,3 @@ def test(cx):
 
         cx.run("inv py.quality",
                warn=True)
-
-        cx.run("inv py.quality-serve",
-               aynchronous=True)
