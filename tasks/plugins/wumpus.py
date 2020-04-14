@@ -36,5 +36,8 @@ def test(cx):
         cx.run("inv py.build")
 
         cx.run("inv py.tests-all")
-        cx.run("inv py.coverage-report")
-        cx.run("inv py.coverage-serve")
+
+        cx.run("inv py.quality")
+
+        cx.run("inv py.coverage-serve",
+               aynchronous=True)
