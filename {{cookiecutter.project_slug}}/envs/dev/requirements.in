@@ -8,21 +8,19 @@ pip
 wheel
 twine
 pip-tools
-pipdeptree
 
 # interactive and debugging
 ipython
 pdbpp
-remote-pdb
 
 # utilities
-# bumpversion
 versioneer
 
 
 # task running
 invoke
 fabric
+jubeo
 
 # docs
 sphinx
