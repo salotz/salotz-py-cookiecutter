@@ -15,12 +15,13 @@ invoke
 jubeo
 
 
-# # docs
-# sphinx
-# guzzle_sphinx_theme
-# sphinxcontrib-napoleon
-# nbsphinx
-# notebook
+# docs
+sphinx
+guzzle_sphinx_theme
+sphinxcontrib-napoleon
+nbsphinx
+notebook
+orgparse
 
 # # website
 # nikola[all]
