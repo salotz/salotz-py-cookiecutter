@@ -668,6 +668,20 @@ project. We don't manage this explicitly since ~git~ is treated mostly
 as first class for these kinds of tasks and is better left to special
 purpose tools which are well integrated and developed.
 
+*** Python Packaging
+
+There is a target to initialize python specific packaging things. This
+is because some tools (like ~versioneer~) need to be generated after
+project instantiation.
+
+Make sure you have a clean tree so you can see the changes then:
+
+#+begin_src bash
+inv py.init
+#+end_src
+
+then inspect and commit.
+
 *** Compiling Dependencies
 
 Then add any extra dependencies you want to the development

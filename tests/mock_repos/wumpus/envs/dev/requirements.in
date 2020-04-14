@@ -8,6 +8,7 @@ pip
 wheel
 twine
 pip-tools
+versioneer
 
 # automation
 invoke
@@ -29,10 +30,11 @@ jubeo
 # testing
 pytest
 pytest-runner
+coverage
 # argcomplete
 # flake8
 # nox
-# coverage
+
 
 
 # # code quality metrics

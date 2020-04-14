@@ -16,6 +16,8 @@ from setuptools import setup, find_packages
 
 import itertools as it
 
+import versioneer
+
 # the basic needed requirements for a package
 base_requirements = []
 
@@ -35,7 +37,7 @@ all_requirements = it.chain.from_iterable(_all_requirements)
 
 setup(
     name='{{ cookiecutter.project_name }}',
-    version='{{ cookiecutter.initial_version }}',
+    version=versioneer.get_version(),
     author="{{ cookiecutter.owner_name }}",
     author_email="{{ cookiecutter.owner_email }}",
     description="{{ cookiecutter.project_description }}",
@@ -50,6 +52,8 @@ setup(
     # building/dev
     setup_requires=['pytest-runner'],
     tests_require=['pytest', 'tox'],
+
+    cmdclass=versioneer.get_cmdclass(),
 
     # package
     packages=find_packages(where='src'),

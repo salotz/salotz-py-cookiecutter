@@ -23,6 +23,7 @@ def init(cx):
     with cx.cd(f"tests/{COOKIECUTTER_TEST_DIR}/wumpus"):
         cx.run("jubeo init --force .")
         cx.run("pip install -r .jubeo/requirements.txt")
+        result = cx.run(f"inv py.init")
         cx.run(f"inv env.deps-pin -n {ENV}")
         cx.run(f"inv env -n {ENV}")
 
@@ -31,7 +32,7 @@ def init(cx):
 def test(cx):
 
     with cx.prefix(f"cd tests/{COOKIECUTTER_TEST_DIR}/wumpus && source _venv/dev/bin/activate"):
-        cx.run("inv -l")
 
-        #cx.run("inv py.tests-unit")
-        cx.run("inv py.tests-integration")
+        cx.run("inv py.build")
+
+        cx.run("inv py.tests-all")
