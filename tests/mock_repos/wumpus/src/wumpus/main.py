@@ -9,5 +9,4 @@ class Wumpus():
 
     def talk_to(self, message):
 
-        return f"{name}: hello to you to."
-
+        return f"{self.name}: hello to you to."

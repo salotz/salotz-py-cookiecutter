@@ -32,15 +32,17 @@ pytest
 pytest-runner
 coverage
 # argcomplete
-# flake8
 # nox
-
-
-
-# # code quality metrics
-# lizard
-
 # pytest-datadir
 # pytest-cov
 # pytest-benchmark
 # pytest-profiling
+
+
+
+# code quality metrics
+flake8
+lizard
+# lizard needs jinja2 for html output
+jinja2
+

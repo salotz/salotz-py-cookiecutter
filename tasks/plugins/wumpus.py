@@ -24,6 +24,8 @@ def init(cx):
         cx.run("jubeo init --force .")
         cx.run("pip install -r .jubeo/requirements.txt")
         result = cx.run(f"inv py.init")
+        cx.run("echo 'PROJECT_SLUG = \"wumpus\"' >> tasks/config.py")
+        cx.run("cat tasks/config.py")
         cx.run(f"inv env.deps-pin -n {ENV}")
         cx.run(f"inv env -n {ENV}")
 
