@@ -1,8 +1,9 @@
 import click
 
-from main import Wumpus
+from wumpus.main import Wumpus
 
-@click.command('--greeting', '-g',
+@click.command()
+@click.option('--greeting', '-g',
                default=None,
                help="What to say to the wumpus")
 @click.argument("name")

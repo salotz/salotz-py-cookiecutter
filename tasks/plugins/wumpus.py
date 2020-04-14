@@ -4,6 +4,8 @@ from ..config import (
     COOKIECUTTER_TEST_DIR,
 )
 
+ENV = "dev"
+
 @task
 def fill_in(cx):
 
@@ -16,14 +18,20 @@ def fill_in(cx):
 @task(pre=[fill_in])
 def init(cx):
 
+    # TODO: make temporary env for running the tooling
+
     with cx.cd(f"tests/{COOKIECUTTER_TEST_DIR}/wumpus"):
         cx.run("jubeo init --force .")
+        cx.run("pip install -r .jubeo/requirements.txt")
+        cx.run(f"inv env.deps-pin -n {ENV}")
+        cx.run(f"inv env -n {ENV}")
 
 
 @task(pre=[init])
 def test(cx):
 
-    with cx.cd(f"tests/{COOKIECUTTER_TEST_DIR}/wumpus"):
+    with cx.prefix(f"cd tests/{COOKIECUTTER_TEST_DIR}/wumpus && source _venv/dev/bin/activate"):
         cx.run("inv -l")
 
-        # cx.run("inv py.test")
+        #cx.run("inv py.tests-unit")
+        cx.run("inv py.tests-integration")
