@@ -41,5 +41,5 @@ def test(cx):
 
         cx.run("inv py.quality")
 
-        cx.run("inv py.coverage-serve",
+        cx.run("inv py.quality-serve",
                aynchronous=True)
