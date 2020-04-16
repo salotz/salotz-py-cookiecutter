@@ -32,6 +32,7 @@ orgparse
 pytest
 pytest-runner
 coverage
+delegator.py
 # argcomplete
 # nox
 # pytest-datadir

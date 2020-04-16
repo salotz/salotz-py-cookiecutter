@@ -22,6 +22,25 @@ invoke
 fabric
 jubeo
 
+# testing
+pytest
+pytest-runner
+argcomplete
+nox
+delegator.py
+pytest-datadir
+pytest-print
+# git+https://github.com/salotz/pytest-datadir.git
+# pytest-fancydir
+# pytest-cov
+# pytest-benchmark
+# pytest-profiling
+
+# code quality metrics
+lizard
+flake8
+coverage
+
 # docs
 sphinx
 guzzle_sphinx_theme
@@ -33,22 +52,4 @@ notebook
 nikola[all]
 ghp-import
 
-# testing
-pytest
-pytest-runner
-argcomplete
-flake8
-nox
-coverage
-
-# code quality metrics
-lizard
-
-pytest-datadir
-# my fork
-# git+https://github.com/salotz/pytest-datadir.git
-pytest-cov
-pytest-benchmark
-pytest-profiling
-pytest-print
 

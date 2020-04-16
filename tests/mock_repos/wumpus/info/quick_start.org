@@ -1,4 +1,13 @@
 * Quick Start
 
+You can use the command line:
 
+#+begin_src bash :tangle ex0.bash
+wumpus -g "hello wumpus" 'Bill'
+#+end_src
 
+You can use it as a library:
+
+#+begin_src python :tangle ex0.py
+  from wumpus.main import Wumpus
+#+end_src
