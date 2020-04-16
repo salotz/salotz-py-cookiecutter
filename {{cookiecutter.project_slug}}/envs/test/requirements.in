@@ -12,3 +12,6 @@ pytest-runner
 # pytest plugins
 git+https://github.com/salotz/pytest-datadir.git
 pytest-print
+
+# helpers for tests
+delegator.py

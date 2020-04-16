@@ -30,8 +30,9 @@ nox
 delegator.py
 pytest-datadir
 pytest-print
+pytest-html
 # git+https://github.com/salotz/pytest-datadir.git
-# pytest-fancydir
+# TODO: pytest-fancydir
 # pytest-cov
 # pytest-benchmark
 # pytest-profiling
