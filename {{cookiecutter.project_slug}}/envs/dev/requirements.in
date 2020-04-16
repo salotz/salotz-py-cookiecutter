@@ -45,8 +45,10 @@ coverage
 lizard
 
 pytest-datadir
+# my fork
+# git+https://github.com/salotz/pytest-datadir.git
 pytest-cov
 pytest-benchmark
 pytest-profiling
-
+pytest-print
 
