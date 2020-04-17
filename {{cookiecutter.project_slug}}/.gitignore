@@ -9,7 +9,7 @@ info/tutorials/*/_output
 info/tutorials/*/_tangle_source
 
 # testing the docs output
-tests/test_docs/_tangled_doc
+tests/test_docs/_tangled_docs
 tests/test_docs/_examples
 tests/test_docs/_tutorials
 
@@ -27,6 +27,7 @@ sphinx/api
 
 # the directory all the virtual environments will be stored
 _venv
+_conda_envs
 
 
 # Created by https://www.gitignore.io/api/python
@@ -95,9 +96,6 @@ coverage.xml
 
 # PyBuilder
 target/
-
-# pyenv
-.python-version
 
 # pipenv
 #   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
