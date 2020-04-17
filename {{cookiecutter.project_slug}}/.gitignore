@@ -28,9 +28,14 @@ sphinx/_build
 sphinx/_api
 sphinx/api
 
+# this is the mangled tmp envs, they shouldn't be laying around but
+# just in case
+envs/__*
+
 # the directory all the virtual environments will be stored
 _venv
 _conda_envs
+_pyenv
 
 
 # Created by https://www.gitignore.io/api/python
