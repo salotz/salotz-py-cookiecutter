@@ -351,7 +351,65 @@ interpreter paths in the future.
 
 *** Documentation and Website
 
-**** Editing and Building Docs
+**** Writing Documentation
+
+The primary source of the documentation is in the ~info~ folder and is
+written in Emacs org mode.
+
+Because of the powerful wiki-like capabilities of org mode it can
+serve as a primary source for reading docs. This obviously serves the
+devs more than end user's expecting an HTML website it is a good first
+measure for writing docs.
+
+Org-mode documents can be converted to RestructuredText files for use
+in generators like ~Sphinx~ (for documentation) or ~Nikola~ (for
+static sites) using the ~pandoc~ tool which we expect to be installed.
+
+Furthermore, org-mode & Emacs provides excellent facilities for
+writing foreign source code blocks which allow for literate documents
+which can easily be tangled into code files that can then be tested
+automatically.
+
+The documentation can roughly be broken down into three major parts:
+
+- pages :: Documents the actual project this repo is about. Should
+  always be tested with the same version of the software it is
+  released with. Should not include extra dependencies.
+- examples & tutorials :: Extended documentation of the project,
+  however this may include extra dependencies of the project. These
+  are tested separately from the pages documentation.
+- meta :: General information about the project management
+  itself. Will not be tested and should only contain source code in
+  extremely small doses.
+
+If you write code blocks in your documentation (which is highly
+recommended) you *must* at least write tests which run the code to
+make sure it at least runs.
+
+When you write code blocks you should use this format:
+
+#+begin_src org
+  ,#+begin_src python :tangle ex0.py
+    print("Hello!!!")
+  ,#+end_src
+#+end_src
+
+Notice there is no extra paths to get the tangling right. The tooling
+for running the tests will take care of setting up an environment for
+tangling scripts as the docs shouldn't really be tangled in place in
+the ~info~ tree.
+
+**** Testing Documentation
+
+There is a folder just for tests that target the docs
+~tests/test_docs~. You should be able to run them after tangling:
+
+#+begin_src bash
+  inv docs.tangle
+  inv docs.test
+#+end_src
+
+**** Building Documentation
 
 To compile and build the docs just run:
 
