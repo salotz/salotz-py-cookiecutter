@@ -33,7 +33,7 @@ extras = [
 
 # combination of all the extras requirements
 _all_requirements = [[base_requirements]] + extras
-all_requirements = it.chain.from_iterable(_all_requirements)
+all_requirements = list(it.chain.from_iterable(_all_requirements))
 
 setup(
     name='{{ cookiecutter.project_name }}',
