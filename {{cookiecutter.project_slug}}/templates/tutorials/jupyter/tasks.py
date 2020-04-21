@@ -17,6 +17,7 @@ def clean(cx):
 @task(pre=[init])
 def tangle(cx):
     cx.run("jupyter-nbconvert --to 'python' --output-dir=_tangle_source README.ipynb")
+    cx.run(f"chmod ug+x ./_tangle_source/*.py", warn=True)
 
 @task
 def clean_env(cx):
