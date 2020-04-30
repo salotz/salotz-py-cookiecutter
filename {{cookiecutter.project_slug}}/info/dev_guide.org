@@ -670,16 +670,16 @@ valid ones.
 
 The target locations for changing versions are in the following files:
 
-- [ ] ~setup.py~
-- [ ] ~src/{{ cookiecutter.project_slug }}/__init__.py~
 - [ ] ~tasks/config.py~
-- [ ] ~sphinx/conf.py~
 - [ ] ~conda/conda-forge/meta.yaml~ (optional)
 
 # IDEA: would like to have this done automatically with some
 # replacement but I need a robust way to do this. Preferrably not
 # using regexs, and still with some interactive intervention and
 # confirmation of correctness
+
+The version number for the package builds is handled through the git
+tags and the ~versioneer~ tool. See the next section on this.
 
 **** Making the release official
 
@@ -773,12 +773,45 @@ Then you can tag the release in the ~git~ commit history:
 inv git.release
 #+end_src
 
+After you tag the release you need to rebuild everything so that
+~versioneer~ gets things right since it gets the version based on the
+tags.
+
+So:
+
+#+begin_src bash
+inv py.build
+#+end_src
+
+Then you can publish this build.
+
+You will also probably want to update the docs as well for the release
+build:
+
+#+begin_src bash
+inv py.build-docs
+#+end_src
+
+
 Publishing the results will vary but you can start with publishing the
 package to PyPI and the VCS hosts with the real publish target:
 
 #+begin_src bash
 inv git.publish
 inv py.publish
+#+end_src
+
+**** Publishing the Website & Documentation
+
+
+Currently the sphinx docs serve as the main web page.
+
+So just make sure you build them and visually "test" them, then you
+can deploy easily:
+
+#+begin_src bash
+inv py.docs-build # or inv docs.serve
+inv py.website-deploy
 #+end_src
 
 
