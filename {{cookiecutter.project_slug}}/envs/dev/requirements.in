@@ -27,6 +27,10 @@ lizard
 flake8
 coverage
 
+# profiling
+pympler
+objgraph
+
 # docs
 sphinx
 sphinxcontrib-napoleon

@@ -3,7 +3,7 @@
     "project_name" : "Wumpus",
     "project_slug" : "wumpus",
     "project_description" : "New Python Project",
-    "initial_version" : "0.0.0a0.dev0",
+    "initial_version" : "0.0.0rc0.dev0",
     "copyright" : "BY-NC",
     "license" : "MIT",
     "owner_name" : "Joe Shmo",
