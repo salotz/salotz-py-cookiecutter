@@ -163,6 +163,8 @@ inv env -n test_install
 
 ** Maintenance Tasks
 
+These 
+
 *** Managing Dependencies
 
 **** Quick Reference
@@ -621,6 +623,64 @@ inv docs.website-deploy
 
 *** Testing
 
+This is about testing the actual source tree (see [[*Testing Documentation][Testing
+Documentation]] for testing the docs).
+
+**** Testing in the Dev Cycle
+
+You can either test in the ~dev~ (or ~test~) environment while working:
+
+#+begin_src bash
+inv py.tests-all
+#+end_src
+
+There are specific commands for each section of tests, primarily:
+
+#+begin_src bash
+inv py.tests-integration
+inv py.tests-unit
+#+end_src
+
+If you use the ~-t~ option you can specify a tag. The tag will be used
+as an identifying string for output to reports etc. Currently it will
+generate test results into the ~reports~
+
+**** Automated Test Matrix
+
+We use ~nox~ as the runner for parametrizing and running tests in
+isolated environments for the test matrix. See the ~noxfile.py~ on how
+this is configured.
+
+You can run the "session" directly since there are other session
+definitions for docs etc.:
+
+#+begin_src bash
+nox -s test
+#+end_src
+
+There is also a target for this:
+
+#+begin_src bash
+inv py.tests-nox
+#+end_src
+
+
+**** Auxiliary "tests"
+
+We also have two other "testing" targets for the benchmarks and the
+"interactive" tests.
+
+Benchmarks have a special toolchain for recording and publishing them
+as metrics.
+
+The 'interactive' tests are just tests which have something like a
+~breakpoint()~ in them. This is kind of an experimental thing, and
+probably more useful for you to write and call them individually for
+different purposes. The idea is that you can write "tests" that
+generate something like realistic live environment (kind of like
+integration tests) that you can drop into a debugger with and poke
+around in.
+
 *** Code Quality Metrics
 
 Just run the end target:
@@ -727,9 +787,20 @@ have this workflow in mind.
 
 **** Release Process
 
+To support testing of artifact repositories which are dependent on
+tags we have a series of "canary" builds we go through before the
+"real" release.
+
 ***** Testing the build
 
-To test a build with whatever work you have go ahead and run:
+Choose a pre-release dev testing version. Typically this is done by
+adding a ~dev0~ or ~dev1~ and so on as you debug the process. This is
+can be done on either a release candidate releas ~rc~ or *primary
+release* e.g. ~v0.0.1~ with no other suffixes. A ~devX~ tag merely
+indicates that some work was being done to debug the actual build,
+release, or CI process rather than the code itself.
+
+After you have changed the version spec you need to test a build:
 
 #+begin_src bash
 inv py.build
@@ -813,10 +884,26 @@ inv py.publish
 #+end_src
 
 
+***** Environment Releases
+
+Environment releases are specific branches which are made from
+releases (including dev, release-candidate, and primary releases) that
+allow for integration with tools & infrastructure like CI servers or
+pre-production testing or production environments.
+
+They are similar to *post-releases* in that bugfixes can happen on
+them and get cherry-picked back onto master (although fixing on master
+and then cherry picking onto the environment branch is preferred when
+it is compatible).
+
+These branches have names like: ~master/ci~, ~master/preproduction~,
+~master/production~ for environment branches off of master and
+~release/v0.1.0/production~ for post-release branches.
+
 ***** The final public release
 
 Edit the version number to something clean that won't be hidden on
-PyPI etc.
+PyPI etc. e.g. ~v0.1.0~.
 
 Then:
 
@@ -826,6 +913,22 @@ inv py.build
 inv py.publish
 inv git.publish
 #+end_src
+
+
+***** Post releases
+
+If you need to support older versions alongside newer versions or if
+you just need to deliver quick fixes you can make *release* branches
+off of the ~master~ branch named like ~release/v0.1.0~. Then go ahead
+and make the fixes you need from there and make new sub-releases
+(going through the whole process as above): ~release/v0.1.1~.
+
+This branch now shall live until support for it ends. You should build
+off of it and publish from it etc. alongside the master branch.
+
+Make sure you want to actually support this kind of overhead for your
+project.
+
 
 ** COMMENT Misc. Tasks
 
