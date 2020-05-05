@@ -16,6 +16,11 @@ tests/test_docs/_tangled_docs
 tests/test_docs/_examples
 tests/test_docs/_tutorials
 
+## reports docs
+# ignore html build dirs in the reports
+reports/**/_html
+
+
 # sphinx
 
 # this is where the converted files reside which are inputs to sphinx
