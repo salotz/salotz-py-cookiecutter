@@ -9,7 +9,7 @@
    .. image:: /_static/logo.svg
       :width: 450 pt
       :align: center
-      :target: https://{{owner_nickname}}.github.io/{{cookiecutter.project_name}}/
+      :target: https://{{cookiecutter.owner_nickname}}.github.io/{{cookiecutter.project_name}}/
 
 Getting Started
 ---------------
