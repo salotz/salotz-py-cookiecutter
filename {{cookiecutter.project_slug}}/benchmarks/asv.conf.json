@@ -4,7 +4,7 @@
     "version": 1,
 
     // The name of the project being benchmarked
-    "project": "{{cookeicutter.project_name}}",
+    "project": "{{cookiecutter.project_name}}",
 
     // The project's homepage
     "project_url": "{{cookiecutter.url}}",
