@@ -92,7 +92,7 @@ VERSION="{{cookiecutter.initial_version}}"
 Just make sure to update the version string here when you do releases
 (included in the checklist for releases).
 
-*** Virtual Environments
+*** Python Virtual Environments
 
 There are helpers for pinning and (re)generating python virtual
 environments which are helpful in developing and testing this project,
@@ -158,6 +158,60 @@ we haven't accidentally depended on something in the dev env:
 
 #+begin_src bash
 inv env -n test_install
+#+end_src
+
+
+*** LXD Container Envs
+
+We use LXD containers for a fully isolated system. This is useful for
+a number of reasons:
+
+- testing scenarios which may potentially cause you computer to crash
+- testing constrained resource scenarios
+- testing that requires an entire linux environment
+- migrating processes to different servers but still allowing for
+  local development
+
+**** Current minimum viable solution
+
+Currently we have support in the tools for building an environment
+that mimics a single developer's environment. It is not general
+purpose yet as our focus was on a need to get a testing environment
+that doesn't crash our entire computer. This workflow isn't
+particularly useful to anyone but the main developer (owner).
+
+That being said the workflow is as follows:
+
+Bring up the container using LXDock:
+
+#+begin_src bash
+lxdock up
+#+end_src
+
+This should make a running instance based on the lxdock.yaml
+file. This can be configured to use a pre-made development image (with
+general purpose configuration installed) or "blank" envs from fresh
+linux distros.
+
+The default password for users is ~password~.
+
+This will also provision the container with the minimal tools needed
+to ssh to it, transfer files, etc. from the ~provision-lxd.sh~.
+
+You shouldn't need to edit this file instead do extra configuration
+afterwards.
+
+Because the image should be preconfigured typically, you only need to
+push the project data to the container:
+
+#+begin_src bash
+inv lxd.push
+#+end_src
+
+You can get changes back with:
+
+#+begin_src bash
+inv lxd.pull
 #+end_src
 
 
