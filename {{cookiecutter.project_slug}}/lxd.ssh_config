@@ -1,0 +1,10 @@
+# -*- mode: ssh-config -*-
+
+Host {{cookiecutter.project_slug}}.dev
+  HostName {{cookiecutter.project_slug}}.dev.lxd  
+  IdentityFile ~/.ssh/id_rsa
+  User {{cookiecutter.owner_nickname}}
+  RequestTTY yes
+  ForwardX11 yes
+  StrictHostKeyChecking no  
+  RemoteCommand exec /bin/bash
