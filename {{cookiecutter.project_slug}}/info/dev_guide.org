@@ -215,6 +215,30 @@ inv lxd.pull
 #+end_src
 
 
+You can get to the container with either the IP in the ~lxc list~ or
+using the aliases defined in the ~lxd.ssh_config~ file.
+
+#+begin_src bash
+ssh -F lxd.ssh_config project.dev
+#+end_src
+
+We recommend a simple bash function (or alias) to some annoying but
+necessary initilization when you login:
+
+#+begin_src bash
+sshlxdlogin () 
+{ 
+    ssh -F lxd.ssh_config -t $1 -- "cd ${PWD} && exec /bin/bash -l"
+}
+#+end_src
+
+Which is used like:
+
+#+begin_src bash
+sshlxdlogin project.dev.lxd
+#+end_src
+
+
 ** Maintenance Tasks
 
 These 
