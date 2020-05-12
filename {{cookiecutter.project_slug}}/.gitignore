@@ -1,6 +1,10 @@
 
 ### Project specific
 
+## jigs
++jigs/*/_output
++jigs/*/_tangle_source
+
 ## org info docs
 
 info/examples/*/_output
@@ -20,6 +24,10 @@ tests/test_docs/_tutorials
 # ignore html build dirs in the reports
 reports/**/_html
 
+
+## testing
+
+_asv_envs
 
 # sphinx
 

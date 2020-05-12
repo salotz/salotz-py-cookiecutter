@@ -7,4 +7,3 @@ Host {{cookiecutter.project_slug}}.dev
   RequestTTY yes
   ForwardX11 yes
   StrictHostKeyChecking no  
-  RemoteCommand exec /bin/bash
