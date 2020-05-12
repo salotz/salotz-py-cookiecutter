@@ -105,9 +105,13 @@ def push_profile(cx):
     )
 
 
-
 @task
 def push_project(cx):
+    """Push the project files to the LXD container.
+
+    Ignores according to the gitignore file
+
+    """
 
     # get the directory to push to
     target_dir = Path(os.getcwd()).parent
@@ -117,12 +121,17 @@ def push_project(cx):
     rsync(cx,
           os.getcwd(),
           target_dir,
-          rsync_opts="-ahi --stats",
+          rsync_opts="-ahi --stats --filter=':- .gitignore'",
     )
 
 
 @task
 def pull_project(cx):
+    """Pull the project files to the LXD container.
+
+    Ignores according to the gitignore file
+
+    """
 
     # get the directory to push to
     target_dir = Path(os.getcwd()).parent
@@ -130,5 +139,5 @@ def pull_project(cx):
     rsync(cx,
           os.getcwd(),
           target_dir,
-          rsync_opts="-ahi --stats --update",
+          rsync_opts="-ahi --stats --filter=':- .gitignore' --update",
     )
