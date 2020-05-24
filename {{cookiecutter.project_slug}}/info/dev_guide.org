@@ -46,16 +46,6 @@ cd {{ cookiecutter.project_name }}
 
 *** Tooling
 
-The project comes configured for use with ~jubeo~ (see the ~.jubeo~
-directory) but without the tasks imported.
-
-To get started you will need to install ~jubeo~ and then run this from
-the project directory:
-
-#+begin_src bash
-jubeo init .
-#+end_src
-
 This will download the appropriate ~invoke~ tasks organized into a
 special structure along with the necessary dependency specs to use
 them.
@@ -237,6 +227,41 @@ Which is used like:
 #+begin_src bash
 sshlxdlogin project.dev.lxd
 #+end_src
+
+
+*** Docker (Application Container) Environments
+
+**** Why?
+
+Application containers are useful in scenarios where LXD containers
+are not and vice versa. Application containers are best used when they
+are stateless (as a complete POSIXy system) whereas LXD containers
+support stateful tasks much better. So if you want to have a complete
+environment where you can store scratch work, intermediates etc LXD is
+a much better choice. That is why we use it for this purpose.
+
+Application containers like Docker are really meant to run a single
+application at a time in an isolated environment. The main goal of
+these is to reduce operational complexity that comes with configuring
+many different server like apps on a single host. Each app gets its
+own host and never has to fight with the other ones. Also many long
+running server type softwares distribute docker images which are very
+easy to use and install. I.e. there really isn't an install process
+beyond ~docker pull~.
+
+For this purpose you may use either Docker or Podman as they are
+largely compatible. We suggest using podman as it doesn't require
+running a daemon. Obviously Docker is more popular and so it is fine
+too.
+
+Running multiple application containers together for some shared
+purpose is extremely common and so using a tool that does this on top
+of Docker seems almost a necessity so we will also give best practices
+for this. We call these *clusters*.
+
+**** Praxis
+
+
 
 
 ** Maintenance Tasks
@@ -1037,6 +1062,24 @@ in the template:
 
 These are tasks that should only be done once at the inception of the
 project but are described for posterity and completeness.
+
+*** Jubeo tooling
+
+The project comes configured for use with ~jubeo~ (see the ~.jubeo~
+directory) but without the tasks imported.
+
+To get started you will need to install ~jubeo~ and then run this from
+the project directory:
+
+#+begin_src bash
+jubeo init --force .
+#+end_src
+
+Then you must first set configuration values in the ~tasks/config.py~
+which cannot be inferred or generated (at this time).
+
+See the comments and instructions in the template file for doing this
+which has specific instructions for the project type.
 
 *** Version Control
 

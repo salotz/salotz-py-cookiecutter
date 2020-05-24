@@ -77,7 +77,7 @@ def pyenv_bootstrap(cx):
 def install_loadout(cx):
 
     with cx.cd(f"$HOME/.{{cookiecutter.owner_nickname}}.d"):
-        cx.run(f"/bin/bash -l -c 'make -f lib/loadouts/{{FINAL_LOADOUT}}.mk all'")
+        cx.run(f"/bin/bash -l -c 'make -f lib/loadouts/{FINAL_LOADOUT}.mk all'")
 
         # load the bimhaw profile
         cx.run(f"/bin/bash -l -c './lib/setups/bimhaw.sh && bimhaw profile -n {FINAL_PROFILE}'")
