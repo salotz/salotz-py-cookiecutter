@@ -1,0 +1,34 @@
+# project wide definition for remote work
+
+sync:
+  defaults:
+    flushOnCreate: true
+    ignore:
+      vcs: true
+
+    # config for syncing to the dev LXD container using the SSH Host
+    lxd-dev:
+      alpha: "."
+      beta: "{{cookiecutter.project_slug}}.dev"
+      mode: "two-way-resolved"
+      ignore:
+        paths:
+          - "_*"
+          - "*~"          
+          - "!/_config.yaml"
+          - "*.py[cod]"
+          - "*$py.class"
+          - "*.so"
+          - "/dist"
+          - "/build"
+          - ".nox"
+          - ".nox"
+          - ".coverage"
+          - "coverage_data.sqlite"
+          - ".coverage.*"
+          - ".cache"
+          - "nosetests.xml"
+          - "coverage.xml"
+          - "*.cover"
+          - ".hypothesis/"
+          - ".pytest_cache/"

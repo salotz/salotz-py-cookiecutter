@@ -1,0 +1,19 @@
+# jig specific definition for remote development
+
+sync:
+  defaults:
+    flushOnCreate: true
+    ignore:
+      vcs: true
+    permissions:
+      defaultFileMode: 0444
+      
+  {{remoteA}}:
+    alpha: "."
+    beta: "{{remoteA}}"
+    mode: "two-way-safe"
+    ignore:
+      paths:
+        - "_*"
+        - "!/_tangle_source"
+        - "*~"
