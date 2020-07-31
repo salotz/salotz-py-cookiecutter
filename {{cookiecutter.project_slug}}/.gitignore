@@ -2,8 +2,8 @@
 ### Project specific
 
 ## jigs
-+jigs/*/_output
-+jigs/*/_tangle_source
+jigs/*/_output
+jigs/*/_tangle_source
 
 ## org info docs
 
