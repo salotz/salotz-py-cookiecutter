@@ -8,9 +8,9 @@ sync:
     permissions:
       defaultFileMode: 0444
       
-  {{remoteA}}:
+  remoteA:
     alpha: "."
-    beta: "{{remoteA}}"
+    beta: "remoteA"
     mode: "two-way-safe"
     ignore:
       paths:
