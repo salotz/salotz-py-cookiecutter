@@ -294,6 +294,79 @@ git commit -m "Updates dev environment"
 #+end_src
 
 
+
+**** Comprehensive Guide
+
+You may also need to update the pinned versions of the meta-tooling
+sometimes as well (i.e. ~.jubeo/requirements.txt~) which you can do by
+editing ~/.jubeo/requirements.in~ (and ~.jubeo/tools.requirements.txt~
+if you need to pin the version of ~pip~).
+
+And then run the core command to pin these:
+
+#+begin_src bash
+inv core.pin-tool-deps
+#+end_src
+
+Because pinning every other env depends on the compile
+~/.jubeo/requirements.txt~ this will effect them.
+
+# TODO: this behaviour should change in the future. It should be
+# possible to make envs which are not "contaminated" and depend on the
+# jubeo tooling.
+
+There are 4 different groups of env specs beyond the meta-tooling
+(~jubeo~) env-spec you can be interested in:
+
+- project :: general project management envs like testing and
+  building; in the ~envs~ dir (i.e. ~envs/env-name~).
+- examples :: for showcasing real use cases; each example
+  (~info/examples/example-name~) has its own ~env~ folder for the spec.
+- tutorials :: for writing executable tutorials that will be in
+  documentation; each tutorial (~info/tutorials/tutorial-name~) has
+  its own ~env~ folder for the spec.
+- jigs :: general purpose "setups" for various things, each jig
+  (~jigs/jig-name~) has its own ~env~ folder for the spec.
+
+
+The examples, tutorials, and jigs typically have commands in their own
+~tasks.py~ which takes care of managing the env. These however, just
+end up using the root ~tasks~ for this. I.e.:
+
+To pin the envs:
+
+#+begin_src bash
+inv docs.pin-example -n example-name
+inv docs.pin-tutorial -n tutorial-name
+inv py.pin-jig -n jig-name
+#+end_src
+
+To make an env:
+
+#+begin_src bash
+inv docs.env-example -n example-name
+inv docs.env-tutorials -n tutorials-name
+inv py.env-jig -n jig-name
+#+end_src
+
+If you omit the name it will perform the actions on all of them e.g.:
+
+#+begin_src bash
+inv docs.env-example
+#+end_src
+
+
+You can also always have env-specs and env builds at any arbitrary
+path and with any env method (~conda~, ~venv~, ~pyenv~, etc.):
+
+#+begin_src bash
+inv env.deps-pin-path --path path/to/env-spec-dir
+inv env.make-env \
+    --spec 'venv' \
+    --spec path/to/env-spec-dir \
+    --path path/to/_env-build
+#+end_src
+
 **** Explanation
 
 Reminder that there are two separate goals of managing dependencies
@@ -433,6 +506,15 @@ This will include each of these files in the dependency compilation
 step.  Note that the ~requirements.in~ can come from any location and
 is not a specification other projects /must/ support.
 
+
+***** tools.requirements.txt
+
+Use this to "pin" or constrain versions of tools which won't be or
+can't be managed by the pinning tool (i.e. ~pip-tools~, meaning ~pip~,
+~setuptools~ etc.).
+
+The main use of this to pin the version of ~pip~ in case it breaks
+some other tools.
 
 ***** pyversion.txt
 
